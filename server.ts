@@ -1,0 +1,169 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
+import express, { Request, Response } from 'express';
+import path from 'path';
+import fs from 'fs';
+import cors from 'cors';
+
+// Prevent unhandled background Firestore stream rejections from crashing the process
+process.on('unhandledRejection', (reason) => {
+  console.warn('[Process Warning] Unhandled Rejection:', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.warn('[Process Warning] Uncaught Exception:', err?.message || err);
+});
+
+// Auto-configure FIREBASE_API_KEY from firebase-applet-config.json if not present
+try {
+  const cfgPath = path.resolve(process.cwd(), 'firebase-applet-config.json');
+  if (fs.existsSync(cfgPath)) {
+    const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+    if (!process.env.FIREBASE_API_KEY && cfg.apiKey) {
+      process.env.FIREBASE_API_KEY = cfg.apiKey;
+    }
+  }
+} catch (_) {}
+
+// Default fallback for JWT Secret
+if (!process.env.JWT_SECRET) {
+  process.env.JWT_SECRET = 'portal_bgn_terpadu_jwt_secret_token_secure_key_2026_prod';
+}
+
+import authRoutes from './server/routes/auth';
+import userRoutes from './server/routes/users';
+import roleRoutes from './server/routes/roles';
+import menuRoutes from './server/routes/menus';
+import masterRoutes from './server/routes/master';
+import esuratRoutes from './server/routes/esurat';
+import stockRoutes from './server/routes/stock';
+import notificationRoutes from './server/routes/notifications';
+import logRoutes from './server/routes/logs';
+import searchRoutes from './server/routes/search';
+import settingRoutes from './server/routes/settings';
+import bbmRoutes from './server/routes/bbm';
+import tugasDivisiRoutes from './server/routes/tugasDivisi';
+import penerimaManfaatRoutes from './server/routes/penerimaManfaat';
+import nutritionPlansRoutes from './server/routes/nutritionPlans';
+import barangDatangRoutes from './server/routes/barangDatang';
+import menuHarianRoutes from './server/routes/menuHarian';
+import documentTemplateRoutes from './server/routes/documentTemplate';
+import distribusiRoutes from './server/routes/distribusi';
+import foodWasteRoutes from './server/routes/foodWaste';
+import petugasRoutes from './server/routes/petugas';
+import { swaggerSpec } from './server/docs/swagger';
+import { initFirestoreSync, getCloudInfo, testFirestoreConnection } from './server/db/firestore';
+
+async function startServer() {
+  const app = express();
+  // Dynamic port: 3000 for local dev behind nginx, or process.env.PORT (8080) for Cloud Run production
+  const distPath = path.join(process.cwd(), 'dist');
+  const distIndexHtml = path.join(distPath, 'index.html');
+  const isProduction =
+    (process.env.NODE_ENV === 'production' ||
+      process.argv[1]?.includes('server.cjs')) &&
+    fs.existsSync(distIndexHtml);
+  const PORT = isProduction ? (Number(process.env.PORT) || 8080) : 3000;
+
+  // Middleware
+  app.use(cors());
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+  // API Health Check
+  app.get('/api/health', (req: Request, res: Response) => {
+    res.json({
+      status: 'online',
+      appName: 'Portal Administrasi Terpadu',
+      version: '2026.1.0-Enterprise',
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  // Google Cloud Database Realtime Status Endpoint
+  app.get('/api/v1/cloud/status', (req: Request, res: Response) => {
+    res.json({
+      success: true,
+      cloud: getCloudInfo()
+    });
+  });
+
+  // Google Cloud Database Live Connection Test Probe
+  app.post('/api/v1/cloud/test-connection', async (req: Request, res: Response) => {
+    const result = await testFirestoreConnection();
+    res.json(result);
+  });
+
+  // Re-seed clean slate master collections to Firestore
+  app.post('/api/v1/cloud/reseed-clean-slate', async (req: Request, res: Response) => {
+    try {
+      await initFirestoreSync();
+      res.json({
+        success: true,
+        message: 'Koleksi database berhasil diinisialisasi dan disinkronisasi ke Firebase!',
+        cloud: getCloudInfo()
+      });
+    } catch (err: any) {
+      res.status(500).json({
+        success: false,
+        message: err?.message || 'Gagal sinkronisasi data ke Firebase'
+      });
+    }
+  });
+
+  // Swagger Specs Endpoint
+  app.get('/api/docs/swagger.json', (req: Request, res: Response) => {
+    res.json(swaggerSpec);
+  });
+
+  // REST API Gateway Routes (/api/v1)
+  app.use('/api/v1/auth', authRoutes);
+  app.use('/api/v1/users', userRoutes);
+  app.use('/api/v1/roles', roleRoutes);
+  app.use('/api/v1/menus', menuRoutes);
+  app.use('/api/v1/master', masterRoutes);
+  app.use('/api/v1/esurat', esuratRoutes);
+  app.use('/api/v1/stock', stockRoutes);
+  app.use('/api/v1/notifications', notificationRoutes);
+  app.use('/api/v1/activity-logs', logRoutes);
+  app.use('/api/v1/search', searchRoutes);
+  app.use('/api/v1/settings', settingRoutes);
+  app.use('/api/v1/bbm', bbmRoutes);
+  app.use('/api/v1/tugas-divisi', tugasDivisiRoutes);
+  app.use('/api/v1/penerima-manfaat', penerimaManfaatRoutes);
+  app.use('/api/v1/nutrition-plans', nutritionPlansRoutes);
+  app.use('/api/nutrition', nutritionPlansRoutes);
+  app.use('/api/v1/barang-datang', barangDatangRoutes);
+  app.use('/api/v1/menu-harian', menuHarianRoutes);
+  app.use('/api/v1/document-template', documentTemplateRoutes);
+  app.use('/api/v1/distribusi', distribusiRoutes);
+  app.use('/api/v1/food-waste', foodWasteRoutes);
+  app.use('/api/food-waste', foodWasteRoutes);
+  app.use('/api/v1/petugas', petugasRoutes);
+  app.use('/api/petugas', petugasRoutes);
+
+  // Development vs Production Environment Setup
+  if (!isProduction) {
+    const { createServer: createViteServer } = await import('vite');
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: 'spa'
+    });
+    app.use(vite.middlewares);
+  } else {
+    app.use(express.static(distPath));
+    app.get('*', (req: Request, res: Response) => {
+      res.sendFile(distIndexHtml);
+    });
+  }
+
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`[Portal Enterprise Gateway] Running on http://0.0.0.0:${PORT}`);
+    // Initialize Google Cloud Firestore synchronization in background after port is bound
+    setTimeout(() => {
+      initFirestoreSync().catch(err => console.error('Firestore initialization warning:', err));
+    }, 200);
+  });
+}
+
+startServer();
