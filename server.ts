@@ -10,8 +10,11 @@ import cors from 'cors';
 process.on('unhandledRejection', (reason) => {
   console.warn('[Process Warning] Unhandled Rejection:', reason);
 });
-process.on('uncaughtException', (err) => {
+process.on('uncaughtException', (err: any) => {
   console.warn('[Process Warning] Uncaught Exception:', err?.message || err);
+  if (err?.code === 'EADDRINUSE') {
+    process.exit(1);
+  }
 });
 
 // Auto-configure FIREBASE_API_KEY from firebase-applet-config.json if not present
@@ -46,24 +49,19 @@ import tugasDivisiRoutes from './server/routes/tugasDivisi';
 import penerimaManfaatRoutes from './server/routes/penerimaManfaat';
 import nutritionPlansRoutes from './server/routes/nutritionPlans';
 import barangDatangRoutes from './server/routes/barangDatang';
-import menuHarianRoutes from './server/routes/menuHarian';
 import documentTemplateRoutes from './server/routes/documentTemplate';
 import distribusiRoutes from './server/routes/distribusi';
-import foodWasteRoutes from './server/routes/foodWaste';
-import petugasRoutes from './server/routes/petugas';
 import { swaggerSpec } from './server/docs/swagger';
 import { initFirestoreSync, getCloudInfo, testFirestoreConnection } from './server/db/firestore';
 
 async function startServer() {
   const app = express();
-  // Dynamic port: 3000 for local dev behind nginx, or process.env.PORT (8080) for Cloud Run production
   const distPath = path.join(process.cwd(), 'dist');
   const distIndexHtml = path.join(distPath, 'index.html');
-  const isProduction =
-    (process.env.NODE_ENV === 'production' ||
-      process.argv[1]?.includes('server.cjs')) &&
-    fs.existsSync(distIndexHtml);
-  const PORT = isProduction ? (Number(process.env.PORT) || 8080) : 3000;
+  const isProduction = process.argv[1]?.includes('server.cjs') && fs.existsSync(distIndexHtml);
+  const portArgIndex = process.argv.indexOf('--port');
+  const cliPort = portArgIndex !== -1 ? Number(process.argv[portArgIndex + 1]) : null;
+  const PORT = cliPort || (isProduction ? (Number(process.env.PORT) || 8080) : 3000);
 
   // Middleware
   app.use(cors());
@@ -134,19 +132,14 @@ async function startServer() {
   app.use('/api/v1/nutrition-plans', nutritionPlansRoutes);
   app.use('/api/nutrition', nutritionPlansRoutes);
   app.use('/api/v1/barang-datang', barangDatangRoutes);
-  app.use('/api/v1/menu-harian', menuHarianRoutes);
   app.use('/api/v1/document-template', documentTemplateRoutes);
   app.use('/api/v1/distribusi', distribusiRoutes);
-  app.use('/api/v1/food-waste', foodWasteRoutes);
-  app.use('/api/food-waste', foodWasteRoutes);
-  app.use('/api/v1/petugas', petugasRoutes);
-  app.use('/api/petugas', petugasRoutes);
 
   // Development vs Production Environment Setup
   if (!isProduction) {
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: { middlewareMode: true, allowedHosts: true },
       appType: 'spa'
     });
     app.use(vite.middlewares);
@@ -157,12 +150,21 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`  ➜  Local:   http://localhost:${PORT}/`);
+    console.log(`  ➜  Network: http://0.0.0.0:${PORT}/`);
     console.log(`[Portal Enterprise Gateway] Running on http://0.0.0.0:${PORT}`);
     // Initialize Google Cloud Firestore synchronization in background after port is bound
     setTimeout(() => {
       initFirestoreSync().catch(err => console.error('Firestore initialization warning:', err));
     }, 200);
+  });
+
+  server.on('error', (err: any) => {
+    console.error('Server error:', err);
+    if (err.code === 'EADDRINUSE') {
+      process.exit(1);
+    }
   });
 }
 
