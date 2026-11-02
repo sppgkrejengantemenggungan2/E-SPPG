@@ -56,7 +56,7 @@ export const Header: React.FC<HeaderProps> = ({
               />
               <div>
                 <h1 className="text-xs sm:text-sm font-bold tracking-tight text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate max-w-[140px] min-[400px]:max-w-[200px] sm:max-w-none">
-                  {settings.namaPortal || 'Portal Administrasi Terpadu'}
+                  {settings.namaPortal && settings.namaPortal !== 'Portal Administrasi Terpadu' ? settings.namaPortal : 'E-SPPG HAFSHAWATY2'}
                 </h1>
                 <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold tracking-wide block truncate">
                   Badan Gizi Nasional RI

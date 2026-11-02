@@ -15,7 +15,13 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const user = dbStore.users.find(u => u.username === username || u.email === username);
+    const cleanInput = (username || '').trim().toLowerCase();
+    const user = dbStore.users.find(u => 
+      u.username.toLowerCase() === cleanInput || 
+      u.email.toLowerCase() === cleanInput ||
+      u.email.toLowerCase().split('@')[0] === cleanInput ||
+      u.username.toLowerCase().split('@')[0] === cleanInput
+    );
 
     if (!user) {
       dbStore.addLog('ANONYMOUS', username, 'SSO & Auth', 'Gagal Login User', `Username '${username}' tidak ditemukan.`, req.ip, 'Gagal');
@@ -32,7 +38,7 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
     // Validate password against user.password in dbStore
     const isPasswordValid = user.password
       ? password === user.password
-      : password === 'password123' || password === user.username;
+      : password === 'Krejengan' || password === 'password123' || password === user.username;
 
     if (!isPasswordValid) {
       dbStore.addLog(user.id, user.nama, 'SSO & Auth', 'Gagal Login Password', 'Kata sandi yang dimasukkan salah.', req.ip, 'Gagal');

@@ -382,9 +382,39 @@ export async function initFirestoreSync() {
 
       const snapshot = await collRef.get();
 
+      // Clean slate protection: if local collection is intentionally empty (excluding structural roles/menus), purge stale Firestore data
+      const initialItems = (dbStore as any)[item.key];
+      if (Array.isArray(initialItems) && initialItems.length === 0 && !['roles', 'menus'].includes(item.key)) {
+        if (!snapshot.empty) {
+          try {
+            const batch = db.batch();
+            snapshot.docs.forEach(d => batch.delete(d.ref));
+            await batch.commit().catch(() => {});
+            console.log(`🧹 Purged stale Firestore records in '${item.coll}'`);
+          } catch (_) {}
+        }
+        continue;
+      }
+
+      // Users collection: guarantee single active Admin Penuh and purge legacy users
+      if (item.key === 'users') {
+        const adminUser = dbStore.users[0];
+        if (adminUser) {
+          try {
+            await collRef.doc(adminUser.id).set(JSON.parse(JSON.stringify(adminUser))).catch(() => {});
+            snapshot.docs.forEach(d => {
+              if (d.id !== adminUser.id) {
+                d.ref.delete().catch(() => {});
+              }
+            });
+            console.log(`👤 Synchronized Admin Penuh '${adminUser.email}' to Firestore`);
+          } catch (_) {}
+        }
+        continue;
+      }
+
       if (snapshot.empty) {
         // Seed initial data to Cloud Firestore ONCE if collection is completely empty
-        const initialItems = (dbStore as any)[item.key];
         if (Array.isArray(initialItems) && initialItems.length > 0) {
           console.log(`🌱 Seeding ${initialItems.length} items to Firestore collection '${item.coll}'...`);
           // Batch write initial seed to ensure efficiency

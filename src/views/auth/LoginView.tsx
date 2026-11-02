@@ -60,7 +60,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onBackToVisitor, onLoginSu
             window.removeEventListener('message', listener);
             if (popup) popup.close();
             // Automatically log in user as Admin Penuh
-            const success = await login('dapurhafshawaty@gmail.com', 'password123');
+            const success = await login('sppgkrejengantemenggungan2@gmail.com', 'Krejengan');
             if (success) onLoginSuccess?.();
             setLoading(false);
           }

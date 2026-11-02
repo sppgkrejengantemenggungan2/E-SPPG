@@ -28,7 +28,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [menus, setMenus] = useState<MenuItem[]>([]);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [settings, setSettings] = useState<PortalSettings>({
-    namaPortal: 'Portal Administrasi Terpadu',
+    namaPortal: 'E-SPPG HAFSHAWATY2',
     deskripsi: 'Single Entry Point Enterprise & Module Integration Gateway (e-Surat & Stock Opname)',
     logoUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100',
     theme: 'light',
