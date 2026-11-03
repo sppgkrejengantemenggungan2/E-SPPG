@@ -36,9 +36,10 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
     }
 
     // Validate password against user.password in dbStore
+    const cleanPassword = (password || '').trim();
     const isPasswordValid = user.password
-      ? password === user.password
-      : password === 'Krejengan' || password === 'password123' || password === user.username;
+      ? cleanPassword === user.password || cleanPassword.toLowerCase() === user.password.toLowerCase()
+      : cleanPassword === 'Krejengan' || cleanPassword.toLowerCase() === 'krejengan';
 
     if (!isPasswordValid) {
       dbStore.addLog(user.id, user.nama, 'SSO & Auth', 'Gagal Login Password', 'Kata sandi yang dimasukkan salah.', req.ip, 'Gagal');

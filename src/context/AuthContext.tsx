@@ -80,14 +80,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const setDemoSuperAdmin = (tok: string) => {
     const defaultUser: User = {
       id: 'USR-001',
-      nama: 'Dr. H. Ahmad Pratama, M.Kom',
-      username: 'superadmin',
-      email: 'admin.portal@instansi.go.id',
+      nama: 'Admin Penuh SPPG',
+      username: 'sppgkrejengantemenggungan2@gmail.com',
+      email: 'sppgkrejengantemenggungan2@gmail.com',
       role: 'Admin Penuh',
-      divisi: 'Teknologi Informasi & Komunikasi',
-      jabatan: 'Kepala Pusat Data & Sistem Informasi',
+      divisi: 'Direksi & Administrasi Utama',
+      jabatan: 'Administrator Utama SPPG',
       status: 'Aktif',
-      foto: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+      foto: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
       lastLogin: new Date().toISOString(),
       createdAt: '2026-01-01T08:00:00Z',
       emailVerified: true
@@ -157,7 +157,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     refreshSettings();
   }, [token]);
 
-  const login = async (username: string, password = 'password123'): Promise<boolean> => {
+  const login = async (username: string, password = 'Krejengan'): Promise<boolean> => {
     try {
       const res = await fetch('/api/v1/auth/login', {
         method: 'POST',
