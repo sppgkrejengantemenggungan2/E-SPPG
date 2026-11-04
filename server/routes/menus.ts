@@ -6,6 +6,49 @@ const router = Router();
 
 // Get dynamic menus (sorted by order)
 router.get('/', (req: Request, res: Response): void => {
+  // Ensure required system menus are present
+  if (!dbStore.menus.some(m => m.path === '/admin/menus' || m.id === 'MNU-006')) {
+    dbStore.menus.push({
+      id: 'MNU-006',
+      title: 'Menu Dinamis',
+      path: '/admin/menus',
+      icon: 'Menu',
+      color: '#06B6D4',
+      order: 7,
+      targetModule: 'portal',
+      requiredRole: ['Admin Penuh', 'Super Admin'],
+      isActive: true
+    });
+  }
+
+  if (!dbStore.menus.some(m => m.path === '/admin/logs' || m.id === 'MNU-007')) {
+    dbStore.menus.push({
+      id: 'MNU-007',
+      title: 'Log Aktivitas Central',
+      path: '/admin/logs',
+      icon: 'FileText',
+      color: '#64748B',
+      order: 8,
+      targetModule: 'portal',
+      requiredRole: ['Admin Penuh', 'Super Admin', 'Admin', 'Supervisor', 'Manager'],
+      isActive: true
+    });
+  }
+
+  if (!dbStore.menus.some(m => m.path === '/laporan-plog' || m.id === 'MNU-003-PLOG')) {
+    dbStore.menus.push({
+      id: 'MNU-003-PLOG',
+      title: 'Laporan PLOG',
+      path: '/laporan-plog',
+      icon: 'ClipboardList',
+      color: '#8B5CF6',
+      order: 4.2,
+      targetModule: 'plog',
+      requiredRole: ['Admin Penuh', 'Staff Kantor', 'Distribusi', 'Super Admin', 'Admin', 'Operator', 'Supervisor', 'Manager', 'Staff', 'Viewer'],
+      isActive: true
+    });
+  }
+
   const sortedMenus = [...dbStore.menus].sort((a, b) => a.order - b.order);
   res.json({ success: true, data: sortedMenus });
 });

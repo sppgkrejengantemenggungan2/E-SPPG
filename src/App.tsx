@@ -17,7 +17,9 @@ import { StockOpnameView } from './views/stock/StockOpnameView';
 import { StockOpnameModuleView } from './views/stock/StockOpnameModuleView';
 import { MasterDataView } from './views/master/MasterDataView';
 import { UserManagementView } from './views/admin/UserManagementView';
+import { DynamicMenuView } from './views/admin/DynamicMenuView';
 import { RolePermissionView } from './views/admin/RolePermissionView';
+import { ActivityLogsView } from './views/admin/ActivityLogsView';
 import { PortalSettingsView } from './views/admin/PortalSettingsView';
 import { MasterTemplateDokumenView } from './views/admin/MasterTemplateDokumenView';
 import { InstallationDocView } from './views/docs/InstallationDocView';
@@ -31,6 +33,7 @@ import { PurchaseOrderView } from './components/nutrition/PurchaseOrderView';
 import { PortalSupplierView } from './views/supplier/PortalSupplierView';
 import { BarangDatangView } from './views/stock/BarangDatangView';
 import { LaporanDistribusiView } from './views/distribusi/LaporanDistribusiView';
+import { LaporanPlogView } from './views/plog/LaporanPlogView';
 
 const PortalMain: React.FC = () => {
   const { user, isAuthenticated, isAuthLoading } = useAuth();
@@ -103,7 +106,7 @@ const PortalMain: React.FC = () => {
 
     // Staff Kantor
     if (role === 'Staff Kantor') {
-      return path.startsWith('/esurat') || path.startsWith('/stock') || path.startsWith('/tugas-divisi') || path.startsWith('/perencanaan-bahan') || path === '/dashboard';
+      return path.startsWith('/esurat') || path.startsWith('/stock') || path.startsWith('/tugas-divisi') || path.startsWith('/perencanaan-bahan') || path.startsWith('/laporan-plog') || path === '/dashboard';
     }
 
     // Distribusi
@@ -237,8 +240,12 @@ const PortalMain: React.FC = () => {
         return <MasterDataView />;
       case '/admin/users':
         return <UserManagementView />;
+      case '/admin/menus':
+        return <DynamicMenuView />;
       case '/admin/roles':
         return <RolePermissionView />;
+      case '/admin/logs':
+        return <ActivityLogsView />;
       case '/admin/document-template':
         return <MasterTemplateDokumenView />;
       case '/admin/settings':
@@ -295,6 +302,12 @@ const PortalMain: React.FC = () => {
       case '/laporan-distribusi/data':
       case '/laporan-distribusi/driver':
         return <LaporanDistribusiView currentPath={currentPath} onNavigate={(path) => setCurrentPath(path)} />;
+      case '/laporan-plog':
+      case '/laporan-plog/input-menu':
+      case '/laporan-plog/informasi-gizi':
+      case '/laporan-plog/food-cost':
+      case '/laporan-plog/master-menu-gizi':
+        return <LaporanPlogView currentPath={currentPath} onNavigate={(path) => setCurrentPath(path)} />;
       default:
         return <DashboardView onNavigate={(path) => setCurrentPath(path)} />;
     }

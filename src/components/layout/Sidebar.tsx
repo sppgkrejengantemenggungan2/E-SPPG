@@ -31,6 +31,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPath, onNavigate, isOpe
     po: true,
     tugas: true,
     bbm: true,
+    plog: true,
     master: false,
     admin: true,
   });
@@ -104,6 +105,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPath, onNavigate, isOpe
     bbm: [
       { title: 'Laporan BBM & Armada', path: '/bbm/laporan', icon: Icons.Fuel },
     ],
+    plog: [
+      { title: 'Input Menu', path: '/laporan-plog/input-menu', icon: Icons.Utensils },
+      { title: 'Informasi Kandungan Gizi', path: '/laporan-plog/informasi-gizi', icon: Icons.Activity },
+      { title: 'Informasi Food Cost Menu', path: '/laporan-plog/food-cost', icon: Icons.DollarSign },
+      { title: 'Master Menu & Kandungan Gizi', path: '/laporan-plog/master-menu-gizi', icon: Icons.BookOpen },
+    ],
     distribusi: [
       { title: 'Form Distribusi', path: '/laporan-distribusi/form', icon: Icons.ClipboardEdit },
       { title: 'Data Distribusi', path: '/laporan-distribusi/data', icon: Icons.TableProperties },
@@ -111,7 +118,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPath, onNavigate, isOpe
     ],
     admin: [
       { title: 'Manajemen Pengguna', path: '/admin/users', icon: Icons.Users },
+      { title: 'Menu Dinamis', path: '/admin/menus', icon: Icons.Menu },
       { title: 'Hak Akses & Role', path: '/admin/roles', icon: Icons.Shield },
+      { title: 'Log Aktivitas Central', path: '/admin/logs', icon: Icons.FileText },
       { title: 'Master Template Dokumen', path: '/admin/document-template', icon: Icons.FileSignature },
       { title: 'Pengaturan Portal', path: '/admin/settings', icon: Icons.Settings },
     ]
@@ -141,6 +150,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPath, onNavigate, isOpe
     if (menu.path.includes('portal-supplier')) return 'supplier';
     if (menu.path.includes('perencanaan-bahan')) return 'perencanaanBahan';
     if (menu.path.includes('tugas-divisi')) return 'tugas';
+    if (menu.targetModule === 'plog' || menu.path.includes('laporan-plog')) return 'plog';
     if (menu.path.includes('bbm')) return 'bbm';
     if (menu.path.includes('laporan-distribusi') || menu.path.includes('distribusi')) return 'distribusi';
     if (menu.path.includes('admin') || menu.path.includes('users') || menu.path.includes('menu')) return 'admin';

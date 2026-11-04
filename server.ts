@@ -51,6 +51,7 @@ import nutritionPlansRoutes from './server/routes/nutritionPlans';
 import barangDatangRoutes from './server/routes/barangDatang';
 import documentTemplateRoutes from './server/routes/documentTemplate';
 import distribusiRoutes from './server/routes/distribusi';
+import plogRoutes from './server/routes/plog';
 import { swaggerSpec } from './server/docs/swagger';
 import { initFirestoreSync, getCloudInfo, testFirestoreConnection } from './server/db/firestore';
 
@@ -124,6 +125,7 @@ async function startServer() {
   app.use('/api/v1/stock', stockRoutes);
   app.use('/api/v1/notifications', notificationRoutes);
   app.use('/api/v1/activity-logs', logRoutes);
+  app.use('/api/v1/logs', logRoutes);
   app.use('/api/v1/search', searchRoutes);
   app.use('/api/v1/settings', settingRoutes);
   app.use('/api/v1/bbm', bbmRoutes);
@@ -134,6 +136,7 @@ async function startServer() {
   app.use('/api/v1/barang-datang', barangDatangRoutes);
   app.use('/api/v1/document-template', documentTemplateRoutes);
   app.use('/api/v1/distribusi', distribusiRoutes);
+  app.use('/api/v1/plog', plogRoutes);
 
   // Development vs Production Environment Setup
   if (!isProduction) {

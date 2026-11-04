@@ -61,7 +61,7 @@ export interface MenuItem {
   icon: string; // Lucide icon identifier
   color?: string; // CSS color or Tailwind class
   order: number;
-  targetModule: 'portal' | 'esurat' | 'stock' | 'po' | 'barangDatang' | 'external';
+  targetModule: 'portal' | 'esurat' | 'stock' | 'po' | 'barangDatang' | 'plog' | 'external';
   requiredRole?: UserRole[];
   parentId?: string;
   isActive: boolean;
@@ -1018,6 +1018,9 @@ export interface PlogDailyMenuItem {
   buah: string;
   ekstra?: string;
   jumlahPenerimaManfaat: number;
+  porsiBesar: number;
+  porsiKecil: number;
+  totalJumlahPorsi: number;
   jumlahPorsiHarian: number;
   rincianSasaran?: {
     paudTk?: number;
@@ -1026,6 +1029,9 @@ export interface PlogDailyMenuItem {
     smpMts?: number;
     guruStaf?: number;
     bumilBusui?: number;
+    balita?: number;
+    porsiBesar?: number;
+    porsiKecil?: number;
   };
   waktuDistribusi?: string;
   penanggungJawabGizi?: string;
@@ -1035,28 +1041,29 @@ export interface PlogDailyMenuItem {
   updatedAt?: string;
 }
 
-export interface PlogGiziCalculation {
-  tanggal: string;
-  namaMenuHarian: string;
-  items: {
-    kategori: string;
-    namaMenu: string;
-    porsiGram: number;
-    energiKkal: number;
-    proteinGram: number;
-    lemakGram: number;
-    karbohidratGram: number;
-    seratGram: number;
-    kalsiumMg: number;
-    zatBesiMg: number;
-  }[];
+export interface PlogGiziComponentItem {
+  kategori: string;
+  namaMenu: string;
+  porsiGram: number;
+  energiKkal: number;
+  proteinGram: number;
+  lemakGram: number;
+  karbohidratGram: number;
+  seratGram: number;
+  kalsiumMg?: number;
+  zatBesiMg?: number;
+}
+
+export interface PlogGiziProfile {
+  label: 'Porsi Besar' | 'Porsi Kecil';
+  sasaran: string;
+  jumlahPorsi: number;
+  items: PlogGiziComponentItem[];
   totalEnergiKkal: number;
   totalProteinGram: number;
   totalLemakGram: number;
   totalKarbohidratGram: number;
   totalSeratGram: number;
-  totalKalsiumMg: number;
-  totalZatBesiMg: number;
   standarAKG: {
     energiMin: number;
     energiMax: number;
@@ -1071,9 +1078,76 @@ export interface PlogGiziCalculation {
   rekomendasi?: string;
 }
 
+export interface PlogGiziCalculation {
+  tanggal: string;
+  namaMenuHarian: string;
+  jumlahPenerimaManfaat?: number;
+  porsiBesar?: number;
+  porsiKecil?: number;
+  totalJumlahPorsi?: number;
+  // Detail perhitungan spesifik Porsi Besar dan Porsi Kecil
+  porsiBesarDetail: PlogGiziProfile;
+  porsiKecilDetail: PlogGiziProfile;
+  // Summary / Active items
+  items: PlogGiziComponentItem[];
+  totalEnergiKkal: number;
+  totalProteinGram: number;
+  totalLemakGram: number;
+  totalKarbohidratGram: number;
+  totalSeratGram: number;
+  kalsiumMg?: number;
+  zatBesiMg?: number;
+  standarAKG: {
+    energiMin: number;
+    energiMax: number;
+    proteinMin: number;
+    proteinMax: number;
+    lemakMin: number;
+    lemakMax: number;
+    karboMin: number;
+    karboMax: number;
+  };
+  statusEvaluasi: 'Sesuai Standar AKG' | 'Kurang Energi' | 'Kurang Protein' | 'Perlu Penyesuaian';
+  rekomendasi?: string;
+}
+
+export interface PlogFoodCostProfile {
+  label: 'Porsi Besar' | 'Porsi Kecil';
+  sasaran: string;
+  jumlahPorsi: number;
+  totalAlokasiBiaya: number;
+  foodCostPerPorsi: number;
+  plafonAnggaranPerPorsi: number;
+  persentaseFoodCost: number;
+  selisihEfisiensi: number;
+  statusBiaya: 'Efisien / Surplus' | 'Sesuai Pagu' | 'Melebihi Pagu';
+}
+
+export interface PlogFoodCostItem {
+  namaBahan: string;
+  kategori: string;
+  hargaSatuan: number;
+  // Total
+  kebutuhanKg: number;
+  totalBiaya: number;
+  biayaPerPorsi: number;
+  // Alokasi Porsi Besar
+  kebutuhanKgBesar: number;
+  biayaBesar: number;
+  biayaPerPorsiBesar: number;
+  // Alokasi Porsi Kecil
+  kebutuhanKgKecil: number;
+  biayaKecil: number;
+  biayaPerPorsiKecil: number;
+}
+
 export interface PlogFoodCostCalculation {
   tanggal: string;
   namaMenuHarian: string;
+  jumlahPenerimaManfaat: number;
+  porsiBesar: number;
+  porsiKecil: number;
+  totalJumlahPorsi: number;
   jumlahPorsiHarian: number;
   poNumber?: string;
   totalBelanjaPO: number;
@@ -1082,12 +1156,8 @@ export interface PlogFoodCostCalculation {
   persentaseFoodCost: number;
   selisihEfisiensi: number;
   statusBiaya: 'Efisien / Surplus' | 'Sesuai Pagu' | 'Melebihi Pagu';
-  rincianBahanPO: {
-    namaBahan: string;
-    kategori: string;
-    kebutuhanKg: number;
-    hargaSatuan: number;
-    totalBiaya: number;
-    biayaPerPorsi: number;
-  }[];
+  // Detail perhitungan terpisah Porsi Besar dan Porsi Kecil
+  porsiBesarDetail: PlogFoodCostProfile;
+  porsiKecilDetail: PlogFoodCostProfile;
+  rincianBahanPO: PlogFoodCostItem[];
 }

@@ -54,7 +54,9 @@ import {
   DistributionReport,
   MasterDocumentTemplateConfig,
   DEFAULT_MASTER_TEMPLATE_CONFIG,
-  DivisiSubItemRecord
+  DivisiSubItemRecord,
+  MasterMenuGiziItem,
+  PlogDailyMenuItem
 } from '../../src/types';
 
 export const JWT_SECRET = process.env.JWT_SECRET || 'portal-administrasi-terpadu-super-secret-jwt-key-2026';
@@ -353,6 +355,17 @@ export const initialMenus: MenuItem[] = [
     isActive: true
   },
   {
+    id: 'MNU-003-PLOG',
+    title: 'Laporan PLOG',
+    path: '/laporan-plog',
+    icon: 'ClipboardList',
+    color: '#8B5CF6',
+    order: 4.2,
+    targetModule: 'plog',
+    requiredRole: ['Admin Penuh', 'Staff Kantor', 'Distribusi', 'Super Admin', 'Admin', 'Operator', 'Supervisor', 'Manager', 'Staff', 'Viewer'],
+    isActive: true
+  },
+  {
     id: 'MNU-003-BBM',
     title: 'Laporan BBM Kendaraan',
     path: '/bbm/laporan',
@@ -394,6 +407,28 @@ export const initialMenus: MenuItem[] = [
     order: 6,
     targetModule: 'portal',
     requiredRole: ['Admin Penuh', 'Super Admin', 'Admin'],
+    isActive: true
+  },
+  {
+    id: 'MNU-006',
+    title: 'Menu Dinamis',
+    path: '/admin/menus',
+    icon: 'Menu',
+    color: '#06B6D4',
+    order: 7,
+    targetModule: 'portal',
+    requiredRole: ['Admin Penuh', 'Super Admin'],
+    isActive: true
+  },
+  {
+    id: 'MNU-007',
+    title: 'Log Aktivitas Central',
+    path: '/admin/logs',
+    icon: 'FileText',
+    color: '#64748B',
+    order: 8,
+    targetModule: 'portal',
+    requiredRole: ['Admin Penuh', 'Super Admin', 'Admin', 'Supervisor', 'Manager'],
     isActive: true
   },
   {
@@ -502,7 +537,47 @@ export const initialStockOpnameSessions: StockOpnameSession[] = [];
 // --- Central Notifications & Logs ---
 export const initialNotifications: NotificationItem[] = [];
 
-export const initialActivityLogs: ActivityLog[] = [];
+export const initialActivityLogs: ActivityLog[] = [
+  {
+    id: 'LOG-001',
+    userId: 'USR-001',
+    namaUser: 'sppgkrejengantemenggungan2@gmail.com',
+    modul: 'Auth',
+    aktivitas: 'Login Admin Penuh',
+    detail: 'Autentikasi SSO berhasil dari IP lokal gateway',
+    tanggal: '2026-11-04',
+    jam: '07:30:12',
+    browser: 'Chrome 128 / macOS',
+    ipAddress: '192.168.1.10',
+    status: 'Sukses'
+  },
+  {
+    id: 'LOG-002',
+    userId: 'USR-001',
+    namaUser: 'sppgkrejengantemenggungan2@gmail.com',
+    modul: 'Menu Dinamis',
+    aktivitas: 'Aktivasi Menu Sistem',
+    detail: 'Memulihkan menu Menu Dinamis dan Log Aktivitas Central ke sidebar portal',
+    tanggal: '2026-11-04',
+    jam: '07:35:45',
+    browser: 'Chrome 128 / macOS',
+    ipAddress: '192.168.1.10',
+    status: 'Sukses'
+  },
+  {
+    id: 'LOG-003',
+    userId: 'USR-001',
+    namaUser: 'sppgkrejengantemenggungan2@gmail.com',
+    modul: 'Tugas Divisi',
+    aktivitas: 'Validasi Sub-Menu Dapur',
+    detail: 'Sinkronisasi checklist harian 4 divisi dan upload bukti',
+    tanggal: '2026-11-04',
+    jam: '07:40:00',
+    browser: 'Chrome 128 / macOS',
+    ipAddress: '192.168.1.10',
+    status: 'Sukses'
+  }
+];
 
 export const initialSettings: PortalSettings = {
   namaPortal: 'E-SPPG HAFSHAWATY2',
@@ -674,11 +749,216 @@ export function createDefaultTasksForDateAndDivisi(tanggal: string, divisiId: Ta
 }
 
 // --- INITIAL BENEFICIARY DATASETS ---
-export const initialBeneficiaryGroups: BeneficiaryGroup[] = [];
+export const initialBeneficiaryGroups: BeneficiaryGroup[] = [
+  {
+    id: 'GRP-001',
+    nama: 'Siswa SD / MI (Porsi Kecil)',
+    kategoriUtama: 'Siswa',
+    klasifikasiPorsi: 'Porsi Kecil',
+    deskripsi: 'Peserta didik jenjang SD/MI penerima paket Makan Bergizi Gratis Porsi Kecil',
+    urutan: 1,
+    status: 'Aktif',
+    lembagaList: [
+      {
+        id: 'LBG-001',
+        namaInstansi: 'SD Zainul Hasan Genggong',
+        targetSiswa: 384,
+        targetGuru: 25,
+        total: 409,
+        klasifikasiPorsi: 'Porsi Kecil'
+      }
+    ]
+  },
+  {
+    id: 'GRP-002',
+    nama: 'Siswa SMP / MTs (Porsi Besar)',
+    kategoriUtama: 'Siswa',
+    klasifikasiPorsi: 'Porsi Besar',
+    deskripsi: 'Peserta didik jenjang SMP/MTs penerima paket Makan Bergizi Gratis Porsi Besar',
+    urutan: 2,
+    status: 'Aktif',
+    lembagaList: [
+      {
+        id: 'LBG-002',
+        namaInstansi: 'SMP ZAHA Genggong',
+        targetSiswa: 664,
+        targetGuru: 36,
+        total: 700,
+        klasifikasiPorsi: 'Porsi Besar'
+      }
+    ]
+  },
+  {
+    id: 'GRP-003',
+    nama: 'Siswa SMA / MA (Porsi Besar)',
+    kategoriUtama: 'Siswa',
+    klasifikasiPorsi: 'Porsi Besar',
+    deskripsi: 'Peserta didik jenjang SMA/MA penerima paket Makan Bergizi Gratis Porsi Besar',
+    urutan: 3,
+    status: 'Aktif',
+    lembagaList: [
+      {
+        id: 'LBG-003',
+        namaInstansi: 'MA Model Hafshawaty',
+        targetSiswa: 272,
+        targetGuru: 25,
+        total: 297,
+        klasifikasiPorsi: 'Porsi Besar'
+      }
+    ]
+  },
+  {
+    id: 'GRP-004',
+    nama: 'Balita & Anak Prasekolah',
+    kategoriUtama: 'Balita',
+    klasifikasiPorsi: 'Porsi Kecil',
+    deskripsi: 'Sasaran balita pemenuhan nutrisi dan pencegahan stunting',
+    urutan: 4,
+    status: 'Aktif',
+    lembagaList: [
+      {
+        id: 'LBG-004',
+        namaInstansi: 'Anak Balita Nutrisi',
+        targetSiswa: 68,
+        targetGuru: 0,
+        total: 68,
+        klasifikasiPorsi: 'Porsi Kecil'
+      }
+    ]
+  },
+  {
+    id: 'GRP-005',
+    nama: 'Ibu Hamil & Ibu Menyusui',
+    kategoriUtama: 'Ibu Hamil',
+    klasifikasiPorsi: 'Porsi Besar',
+    deskripsi: 'Sasaran ibu hamil dan ibu menyusui Posyandu binaan SPPG',
+    urutan: 5,
+    status: 'Aktif',
+    lembagaList: [
+      {
+        id: 'LBG-005',
+        namaInstansi: 'Posyandu Ibu Hamil',
+        targetSiswa: 30,
+        targetGuru: 0,
+        total: 30,
+        klasifikasiPorsi: 'Porsi Besar'
+      },
+      {
+        id: 'LBG-006',
+        namaInstansi: 'Posyandu Ibu Menyusui',
+        targetSiswa: 21,
+        targetGuru: 0,
+        total: 21,
+        klasifikasiPorsi: 'Porsi Besar'
+      }
+    ]
+  }
+];
 
-export const initialBeneficiaryLocations: BeneficiaryLocation[] = [];
+export const initialBeneficiaryLocations: BeneficiaryLocation[] = [
+  {
+    id: 'LOC-001',
+    groupId: 'GRP-001',
+    groupNama: 'Siswa SD / MI (Porsi Kecil)',
+    namaInstansi: 'SD Zainul Hasan Genggong',
+    alamat: 'Jl. Pesantren Genggong No. 12, Krejengan, Probolinggo',
+    kontak: '081234567890',
+    klasifikasiPorsi: 'Porsi Kecil',
+    defaultJumlah: 409,
+    status: 'Aktif',
+    kategoriBreakdown: { siswa: 384, guru: 25 }
+  },
+  {
+    id: 'LOC-002',
+    groupId: 'GRP-002',
+    groupNama: 'Siswa SMP / MTs (Porsi Besar)',
+    namaInstansi: 'SMP ZAHA Genggong',
+    alamat: 'Kompleks Pesantren Zainul Hasan, Krejengan',
+    kontak: '081234567891',
+    klasifikasiPorsi: 'Porsi Besar',
+    defaultJumlah: 700,
+    status: 'Aktif',
+    kategoriBreakdown: { siswa: 664, guru: 36 }
+  },
+  {
+    id: 'LOC-003',
+    groupId: 'GRP-003',
+    groupNama: 'Siswa SMA / MA (Porsi Besar)',
+    namaInstansi: 'MA Model Hafshawaty',
+    alamat: 'Kampus Hafshawaty Genggong, Krejengan',
+    kontak: '081234567892',
+    klasifikasiPorsi: 'Porsi Besar',
+    defaultJumlah: 297,
+    status: 'Aktif',
+    kategoriBreakdown: { siswa: 272, guru: 25 }
+  },
+  {
+    id: 'LOC-004',
+    groupId: 'GRP-004',
+    groupNama: 'Balita & Anak Prasekolah',
+    namaInstansi: 'Anak Balita Nutrisi',
+    alamat: 'Posyandu Terpadu Krejengan Temenggungan 2',
+    kontak: '081234567893',
+    klasifikasiPorsi: 'Porsi Kecil',
+    defaultJumlah: 68,
+    status: 'Aktif',
+    kategoriBreakdown: { siswa: 68, guru: 0 }
+  },
+  {
+    id: 'LOC-005',
+    groupId: 'GRP-005',
+    groupNama: 'Ibu Hamil & Ibu Menyusui',
+    namaInstansi: 'Posyandu Ibu Hamil',
+    alamat: 'Balai Desa Temenggungan, Krejengan',
+    kontak: '081234567894',
+    klasifikasiPorsi: 'Porsi Besar',
+    defaultJumlah: 30,
+    status: 'Aktif',
+    kategoriBreakdown: { siswa: 30, guru: 0 }
+  },
+  {
+    id: 'LOC-006',
+    groupId: 'GRP-005',
+    groupNama: 'Ibu Hamil & Ibu Menyusui',
+    namaInstansi: 'Posyandu Ibu Menyusui',
+    alamat: 'Balai Desa Temenggungan, Krejengan',
+    kontak: '081234567895',
+    klasifikasiPorsi: 'Porsi Besar',
+    defaultJumlah: 21,
+    status: 'Aktif',
+    kategoriBreakdown: { siswa: 21, guru: 0 }
+  }
+];
 
-export const createInitialBeneficiariesForDate = (_tanggal: string): DailyBeneficiaryRecord[] => [];
+export const createInitialBeneficiariesForDate = (tanggal: string): DailyBeneficiaryRecord[] => {
+  const records: DailyBeneficiaryRecord[] = [];
+  const nowStr = new Date().toISOString().replace('T', ' ').slice(0, 19);
+
+  initialBeneficiaryGroups.forEach((g) => {
+    (g.lembagaList || []).forEach((l, idx) => {
+      const jumlahAwal = (Number(l.targetSiswa) || 0) + (Number(l.targetGuru) || 0);
+      records.push({
+        id: `BEN-${tanggal}-${g.id}-${idx + 1}`,
+        tanggal,
+        groupId: g.id,
+        groupNama: g.nama,
+        locationId: l.id,
+        namaInstansi: l.namaInstansi,
+        kategori: g.kategoriUtama,
+        jumlahAwal,
+        penambahan: 0,
+        pengurangan: 0,
+        totalPenerima: jumlahAwal,
+        keterangan: `${l.namaInstansi} (${l.klasifikasiPorsi || g.klasifikasiPorsi})`,
+        status: 'DRAFT',
+        createdBy: 'System Baseline',
+        createdAt: nowStr
+      });
+    });
+  });
+
+  return records;
+};
 
 // =========================================================
 // INITIAL DATA FOR PERENCANAAN KEBUTUHAN BAHAN PANGAN
@@ -693,6 +973,316 @@ export const initialNutritionPlans: NutritionPlan[] = [];
 export const initialNutritionPlanItems: NutritionPlanItem[] = [];
 
 export const initialBarangDatang: BarangDatang[] = [];
+
+// =========================================================
+// INITIAL DATA FOR MASTER MENU & KANDUNGAN GIZI (PLOG)
+// =========================================================
+export const initialMasterMenuGizi: MasterMenuGiziItem[] = [
+  {
+    id: 'GIZI-001',
+    namaMenu: 'Nasi Putih Pulen',
+    kategori: 'Makanan Pokok',
+    porsiGram: 100,
+    energiKkal: 175,
+    proteinGram: 3.0,
+    lemakGram: 0.3,
+    karbohidratGram: 39.8,
+    seratGram: 1.2,
+    kalsiumMg: 15,
+    zatBesiMg: 0.8,
+    estimasiBiayaPorsi: 1500,
+    standarKecukupan: 'Kecukupan Karbohidrat Utama',
+    keterangan: 'Beras Medium / Premium SPPG, dimasak pulen standar TKPI'
+  },
+  {
+    id: 'GIZI-002',
+    namaMenu: 'Nasi Merah Organik',
+    kategori: 'Makanan Pokok',
+    porsiGram: 100,
+    energiKkal: 149,
+    proteinGram: 2.8,
+    lemakGram: 0.4,
+    karbohidratGram: 32.5,
+    seratGram: 2.5,
+    kalsiumMg: 20,
+    zatBesiMg: 1.2,
+    estimasiBiayaPorsi: 2000,
+    standarKecukupan: 'Tinggi Serat & Indeks Glikemik Rendah',
+    keterangan: 'Beras Merah lokal Probolinggo'
+  },
+  {
+    id: 'GIZI-003',
+    namaMenu: 'Ayam Goreng Lengkuas',
+    kategori: 'Lauk Hewani',
+    porsiGram: 80,
+    energiKkal: 218,
+    proteinGram: 18.2,
+    lemakGram: 14.5,
+    karbohidratGram: 2.1,
+    seratGram: 0.5,
+    kalsiumMg: 24,
+    zatBesiMg: 1.8,
+    estimasiBiayaPorsi: 4500,
+    standarKecukupan: 'Protein Hewani Tinggi',
+    keterangan: 'Daging ayam segar ungkep bumbu lengkuas'
+  },
+  {
+    id: 'GIZI-004',
+    namaMenu: 'Ayam Kecap Gurih',
+    kategori: 'Lauk Hewani',
+    porsiGram: 80,
+    energiKkal: 195,
+    proteinGram: 17.5,
+    lemakGram: 11.2,
+    karbohidratGram: 5.8,
+    seratGram: 0.4,
+    kalsiumMg: 22,
+    zatBesiMg: 1.6,
+    estimasiBiayaPorsi: 4200,
+    standarKecukupan: 'Protein Hewani Asam Amino Esensial',
+    keterangan: 'Daging ayam bumbu kecap manis alami'
+  },
+  {
+    id: 'GIZI-005',
+    namaMenu: 'Telur Balado Daun Jeruk',
+    kategori: 'Lauk Hewani',
+    porsiGram: 60,
+    energiKkal: 115,
+    proteinGram: 7.8,
+    lemakGram: 8.2,
+    karbohidratGram: 2.5,
+    seratGram: 0.3,
+    kalsiumMg: 45,
+    zatBesiMg: 1.5,
+    estimasiBiayaPorsi: 2800,
+    standarKecukupan: 'Protein Telur Utuh & Kolin',
+    keterangan: 'Telur ayam ras rebus sambal balado halus'
+  },
+  {
+    id: 'GIZI-006',
+    namaMenu: 'Ikan Gurame Asam Manis',
+    kategori: 'Lauk Hewani',
+    porsiGram: 75,
+    energiKkal: 142,
+    proteinGram: 16.4,
+    lemakGram: 4.8,
+    karbohidratGram: 7.2,
+    seratGram: 0.6,
+    kalsiumMg: 35,
+    zatBesiMg: 1.4,
+    estimasiBiayaPorsi: 4800,
+    standarKecukupan: 'Protein & Asam Lemak Omega',
+    keterangan: 'Fillet ikan gurame saus tomat nenas'
+  },
+  {
+    id: 'GIZI-007',
+    namaMenu: 'Daging Sapi Teriyaki',
+    kategori: 'Lauk Hewani',
+    porsiGram: 65,
+    energiKkal: 188,
+    proteinGram: 19.5,
+    lemakGram: 10.8,
+    karbohidratGram: 3.2,
+    seratGram: 0.3,
+    kalsiumMg: 18,
+    zatBesiMg: 2.4,
+    estimasiBiayaPorsi: 6000,
+    standarKecukupan: 'Zat Besi Heme & Seng (Zinc)',
+    keterangan: 'Irisan daging sapi segar bumbu saus teriyaki'
+  },
+  {
+    id: 'GIZI-008',
+    namaMenu: 'Tempe Bacem Gurih',
+    kategori: 'Lauk Nabati',
+    porsiGram: 50,
+    energiKkal: 118,
+    proteinGram: 7.5,
+    lemakGram: 4.2,
+    karbohidratGram: 12.8,
+    seratGram: 1.8,
+    kalsiumMg: 55,
+    zatBesiMg: 1.6,
+    estimasiBiayaPorsi: 1200,
+    standarKecukupan: 'Protein Nabati Fermentasi & Probiotik',
+    keterangan: 'Tempe kedelai kuning bacem gula merah'
+  },
+  {
+    id: 'GIZI-009',
+    namaMenu: 'Tahu Goreng Bumbu Kuning',
+    kategori: 'Lauk Nabati',
+    porsiGram: 50,
+    energiKkal: 78,
+    proteinGram: 5.4,
+    lemakGram: 4.6,
+    karbohidratGram: 3.8,
+    seratGram: 1.1,
+    kalsiumMg: 80,
+    zatBesiMg: 1.4,
+    estimasiBiayaPorsi: 1000,
+    standarKecukupan: 'Kalsium Nabati Tinggi',
+    keterangan: 'Tahu putih segar ungkep kunyit ketumbar'
+  },
+  {
+    id: 'GIZI-010',
+    namaMenu: 'Tempe Orek Manis',
+    kategori: 'Lauk Nabati',
+    porsiGram: 40,
+    energiKkal: 96,
+    proteinGram: 6.2,
+    lemakGram: 3.8,
+    karbohidratGram: 8.5,
+    seratGram: 1.4,
+    kalsiumMg: 48,
+    zatBesiMg: 1.3,
+    estimasiBiayaPorsi: 1100,
+    standarKecukupan: 'Protein Nabati Tambahan',
+    keterangan: 'Tempe potong dadu masak kecap manis'
+  },
+  {
+    id: 'GIZI-011',
+    namaMenu: 'Sayur Sop Wortel Buncis',
+    kategori: 'Sayuran',
+    porsiGram: 100,
+    energiKkal: 42,
+    proteinGram: 1.8,
+    lemakGram: 0.4,
+    karbohidratGram: 8.2,
+    seratGram: 2.4,
+    kalsiumMg: 42,
+    zatBesiMg: 1.1,
+    estimasiBiayaPorsi: 1500,
+    standarKecukupan: 'Vitamin A, Serat & Kalium',
+    keterangan: 'Wortel, buncis, kembang kol, kuah kaldu bening'
+  },
+  {
+    id: 'GIZI-012',
+    namaMenu: 'Sayur Asem Segar',
+    kategori: 'Sayuran',
+    porsiGram: 100,
+    energiKkal: 38,
+    proteinGram: 1.5,
+    lemakGram: 0.3,
+    karbohidratGram: 7.8,
+    seratGram: 2.1,
+    kalsiumMg: 38,
+    zatBesiMg: 0.9,
+    estimasiBiayaPorsi: 1400,
+    standarKecukupan: 'Antioksidan & Mineral Alami',
+    keterangan: 'Labu siam, jagung manis, kacang panjang asam jawa'
+  },
+  {
+    id: 'GIZI-013',
+    namaMenu: 'Capcay Sayur Bakso',
+    kategori: 'Sayuran',
+    porsiGram: 100,
+    energiKkal: 68,
+    proteinGram: 4.2,
+    lemakGram: 2.1,
+    karbohidratGram: 8.5,
+    seratGram: 2.6,
+    kalsiumMg: 52,
+    zatBesiMg: 1.3,
+    estimasiBiayaPorsi: 2200,
+    standarKecukupan: 'Multi Vitamin Sayuran Campur',
+    keterangan: 'Sawi putih, sawi hijau, wortel, bakso sapi'
+  },
+  {
+    id: 'GIZI-014',
+    namaMenu: 'Sayur Bening Bayam Jagung',
+    kategori: 'Sayuran',
+    porsiGram: 100,
+    energiKkal: 36,
+    proteinGram: 2.1,
+    lemakGram: 0.2,
+    karbohidratGram: 7.0,
+    seratGram: 2.2,
+    kalsiumMg: 68,
+    zatBesiMg: 1.9,
+    estimasiBiayaPorsi: 1500,
+    standarKecukupan: 'Zat Besi Non-Heme & Asam Folat',
+    keterangan: 'Bayam hijau segar, jagung manis pipil, temu kunci'
+  },
+  {
+    id: 'GIZI-015',
+    namaMenu: 'Pisang Ambon Segar',
+    kategori: 'Buah',
+    porsiGram: 100,
+    energiKkal: 92,
+    proteinGram: 1.0,
+    lemakGram: 0.2,
+    karbohidratGram: 23.4,
+    seratGram: 2.6,
+    kalsiumMg: 12,
+    zatBesiMg: 0.5,
+    estimasiBiayaPorsi: 1500,
+    standarKecukupan: 'Kalium, Serat & Energi Cepat Cerna',
+    keterangan: '1 buah pisang ambon masak pohon'
+  },
+  {
+    id: 'GIZI-016',
+    namaMenu: 'Semangka Potong Merah',
+    kategori: 'Buah',
+    porsiGram: 100,
+    energiKkal: 32,
+    proteinGram: 0.6,
+    lemakGram: 0.2,
+    karbohidratGram: 7.2,
+    seratGram: 0.8,
+    kalsiumMg: 10,
+    zatBesiMg: 0.4,
+    estimasiBiayaPorsi: 1200,
+    standarKecukupan: 'Likopen & Hidrasi Alami',
+    keterangan: 'Semangka merah potong dadu tanpa biji'
+  },
+  {
+    id: 'GIZI-017',
+    namaMenu: 'Jeruk Manis',
+    kategori: 'Buah',
+    porsiGram: 100,
+    energiKkal: 45,
+    proteinGram: 0.9,
+    lemakGram: 0.1,
+    karbohidratGram: 11.2,
+    seratGram: 1.4,
+    kalsiumMg: 40,
+    zatBesiMg: 0.4,
+    estimasiBiayaPorsi: 1500,
+    standarKecukupan: 'Vitamin C Daya Tahan Tubuh',
+    keterangan: '1 buah jeruk manis lokal segar'
+  },
+  {
+    id: 'GIZI-018',
+    namaMenu: 'Melon Segar',
+    kategori: 'Buah',
+    porsiGram: 100,
+    energiKkal: 36,
+    proteinGram: 0.7,
+    lemakGram: 0.2,
+    karbohidratGram: 8.2,
+    seratGram: 1.0,
+    kalsiumMg: 14,
+    zatBesiMg: 0.5,
+    estimasiBiayaPorsi: 1400,
+    standarKecukupan: 'Vitamin A & Vitamin C',
+    keterangan: 'Melon hijau potong segar'
+  },
+  {
+    id: 'GIZI-019',
+    namaMenu: 'Susu UHT 125ml',
+    kategori: 'Ekstra / Minuman',
+    porsiGram: 125,
+    energiKkal: 75,
+    proteinGram: 4.0,
+    lemakGram: 4.2,
+    karbohidratGram: 6.0,
+    seratGram: 0,
+    kalsiumMg: 150,
+    zatBesiMg: 0.2,
+    estimasiBiayaPorsi: 3000,
+    standarKecukupan: 'Kalsium & Vitamin D Tulang',
+    keterangan: '1 kotak kemasan susu sapi steril UHT'
+  }
+];
 
 // In-Memory Database Controller Singleton
 class EnterpriseDataStore {
@@ -743,6 +1333,10 @@ class EnterpriseDataStore {
   public rabPlans: RABPlan[] = [];
   public purchaseOrders: PurchaseOrderDocument[] = [];
   public documentTemplate: MasterDocumentTemplateConfig = JSON.parse(JSON.stringify(DEFAULT_MASTER_TEMPLATE_CONFIG));
+
+  // --- PLOG (PERENCANAAN LOGISTIK & OPERASIONAL GIZI) STORE ---
+  public masterMenuGizi: MasterMenuGiziItem[] = [...initialMasterMenuGizi];
+  public plogDailyMenus: PlogDailyMenuItem[] = [];
 
   // Helper method to compute and construct a synchronized RAB Plan
   public calculateRABPlan(
@@ -1634,12 +2228,14 @@ class EnterpriseDataStore {
 
       if (klas === 'Balita' || r.kategori === 'Balita' || upperGroup.includes('BALITA')) {
         totalBalita += r.totalPenerima;
+        porsiKecil += r.totalPenerima;
       } else if (klas === 'Bumil & Busui' || r.kategori === 'Ibu Hamil' || r.kategori === 'Ibu Menyusui' || upperGroup.includes('HAMIL') || upperGroup.includes('MENYUSUI') || upperGroup.includes('BUSUI')) {
         if (r.kategori === 'Ibu Menyusui' || upperGroup.includes('MENYUSUI')) {
           totalIbuMenyusui += r.totalPenerima;
         } else {
           totalIbuHamil += r.totalPenerima;
         }
+        porsiBesar += r.totalPenerima;
       } else if (r.kategori === 'Guru / Staf' || upperGroup.includes('GURU')) {
         totalGuru += r.totalPenerima;
         if (klas === 'Porsi Kecil') {
@@ -1656,6 +2252,12 @@ class EnterpriseDataStore {
         }
       }
     });
+
+    // Safeguard: if any unclassified recipients exist, ensure porsiBesar + porsiKecil === totalPenerima
+    if (porsiBesar + porsiKecil < totalPenerima) {
+      const diff = totalPenerima - (porsiBesar + porsiKecil);
+      porsiBesar += diff;
+    }
 
     return {
       tanggal,
