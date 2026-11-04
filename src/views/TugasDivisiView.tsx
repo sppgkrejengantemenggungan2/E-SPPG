@@ -51,26 +51,37 @@ import { useFirestoreRealtime } from '../lib/useFirestoreRealtime';
 import { GlobalReportHeader } from '../components/document/GlobalReportHeader';
 import { GlobalReportFooter } from '../components/document/GlobalReportFooter';
 import { DocumentSignatures } from '../components/document/DocumentSignatures';
+import { DivisiSubMenuView } from '../components/tugas/DivisiSubMenuView';
+import { Carrot, ChefHat, Boxes } from 'lucide-react';
 
 interface TugasDivisiViewProps {
   onNavigate?: (path: string) => void;
   currentPath?: string;
 }
 
-export const TugasDivisiView: React.FC<TugasDivisiViewProps> = ({ currentPath = '/tugas-divisi' }) => {
+export const TugasDivisiView: React.FC<TugasDivisiViewProps> = ({ currentPath = '/tugas-divisi', onNavigate }) => {
   const { user } = useAuth();
   
   // Determine active sub tab based on path
   const getInitialTab = () => {
     if (currentPath.includes('/menu-harian')) return 'menu-harian';
+    if (currentPath.includes('/persiapan')) return 'persiapan';
+    if (currentPath.includes('/pengolahan')) return 'pengolahan';
+    if (currentPath.includes('/pemorsian')) return 'pemorsian';
+    if (currentPath.includes('/cuci-ompreng')) return 'cuci_ompreng';
     if (currentPath.includes('/riwayat')) return 'riwayat';
     if (currentPath.includes('/template')) return 'template';
     if (currentPath.includes('/laporan')) return 'laporan';
     if (currentPath.includes('/whatsapp')) return 'whatsapp';
-    return 'hari-ini';
+    if (currentPath.includes('/hari-ini')) return 'hari-ini';
+    return 'persiapan';
   };
 
-  const [activeTab, setActiveTab] = useState<'hari-ini' | 'menu-harian' | 'riwayat' | 'template' | 'laporan' | 'whatsapp'>(getInitialTab());
+  const [activeTab, setActiveTab] = useState<'persiapan' | 'pengolahan' | 'pemorsian' | 'cuci_ompreng' | 'hari-ini' | 'menu-harian' | 'riwayat' | 'template' | 'laporan' | 'whatsapp'>(getInitialTab());
+
+  useEffect(() => {
+    setActiveTab(getInitialTab());
+  }, [currentPath]);
 
   // Date state (defaults to today)
   const todayStr = new Date().toISOString().split('T')[0];
@@ -911,21 +922,74 @@ ${record.keterangan ? `${record.keterangan}\n` : ''}${taskListFormatted}`;
         </div>
 
         {/* Navigation Tabs Bar */}
-        <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800/80 flex items-center gap-2 overflow-x-auto no-scrollbar">
+        <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800/80 flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
           <button
-            onClick={() => setActiveTab('hari-ini')}
+            onClick={() => {
+              setActiveTab('persiapan');
+              onNavigate?.('/tugas-divisi/persiapan');
+            }}
             className={`px-4 py-2.5 rounded-full text-xs font-semibold flex items-center gap-2 shrink-0 transition-all cursor-pointer ${
-              activeTab === 'hari-ini'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20 ring-1 ring-blue-500'
+              activeTab === 'persiapan'
+                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-500/20 ring-1 ring-emerald-500 font-bold'
                 : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
-            <CheckSquare className="w-4 h-4" />
-            <span>Tugas Hari Ini</span>
+            <Carrot className="w-4 h-4 text-emerald-400" />
+            <span>Tugas Div. Persiapan</span>
           </button>
 
           <button
-            onClick={() => setActiveTab('menu-harian')}
+            onClick={() => {
+              setActiveTab('pengolahan');
+              onNavigate?.('/tugas-divisi/pengolahan');
+            }}
+            className={`px-4 py-2.5 rounded-full text-xs font-semibold flex items-center gap-2 shrink-0 transition-all cursor-pointer ${
+              activeTab === 'pengolahan'
+                ? 'bg-amber-600 text-white shadow-md shadow-amber-500/20 ring-1 ring-amber-500 font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <ChefHat className="w-4 h-4 text-amber-300" />
+            <span>Tugas Div. Pengolahan</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveTab('pemorsian');
+              onNavigate?.('/tugas-divisi/pemorsian');
+            }}
+            className={`px-4 py-2.5 rounded-full text-xs font-semibold flex items-center gap-2 shrink-0 transition-all cursor-pointer ${
+              activeTab === 'pemorsian'
+                ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20 ring-1 ring-blue-500 font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <Boxes className="w-4 h-4 text-blue-300" />
+            <span>Tugas Div. Pemorsian</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveTab('cuci_ompreng');
+              onNavigate?.('/tugas-divisi/cuci-ompreng');
+            }}
+            className={`px-4 py-2.5 rounded-full text-xs font-semibold flex items-center gap-2 shrink-0 transition-all cursor-pointer ${
+              activeTab === 'cuci_ompreng'
+                ? 'bg-cyan-600 text-white shadow-md shadow-cyan-500/20 ring-1 ring-cyan-500 font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <Sparkles className="w-4 h-4 text-cyan-300" />
+            <span>Tugas Div. Cuci Ompreng</span>
+          </button>
+
+          <span className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1 shrink-0" />
+
+          <button
+            onClick={() => {
+              setActiveTab('menu-harian');
+              onNavigate?.('/tugas-divisi/menu-harian');
+            }}
             className={`px-4 py-2.5 rounded-full text-xs font-semibold flex items-center gap-2 shrink-0 transition-all cursor-pointer ${
               activeTab === 'menu-harian'
                 ? 'bg-amber-600 text-white shadow-md shadow-amber-500/20 ring-1 ring-amber-500'
@@ -934,6 +998,18 @@ ${record.keterangan ? `${record.keterangan}\n` : ''}${taskListFormatted}`;
           >
             <Utensils className="w-4 h-4" />
             <span>Menu Harian (1 Minggu)</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('hari-ini')}
+            className={`px-4 py-2.5 rounded-full text-xs font-semibold flex items-center gap-2 shrink-0 transition-all cursor-pointer ${
+              activeTab === 'hari-ini'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20 ring-1 ring-indigo-500'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <CheckSquare className="w-4 h-4" />
+            <span>Checklist Tambahan</span>
           </button>
 
           <button
@@ -985,6 +1061,15 @@ ${record.keterangan ? `${record.keterangan}\n` : ''}${taskListFormatted}`;
           </button>
         </div>
       </div>
+
+      {/* RENDER DIVISION SUB-MENU VIEW FOR 4 SPECIFIED DIVISIONS */}
+      {['persiapan', 'pengolahan', 'pemorsian', 'cuci_ompreng'].includes(activeTab) && (
+        <DivisiSubMenuView
+          key={activeTab}
+          initialDivisiId={activeTab as 'persiapan' | 'pengolahan' | 'pemorsian' | 'cuci_ompreng'}
+          onNavigate={onNavigate}
+        />
+      )}
 
       {/* TAB 1: TUGAS HARI INI */}
       {activeTab === 'hari-ini' && (

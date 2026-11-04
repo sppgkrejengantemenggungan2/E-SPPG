@@ -355,4 +355,99 @@ router.delete('/templates/:id', (req: Request, res: Response): void => {
   }
 });
 
+// ========================================================
+// SUB-MENU INPUT, DOKUMENTASI, SUHU & WASTE API ENDPOINTS
+// ========================================================
+
+// GET sub-items with optional filters
+router.get('/sub-items', (req: Request, res: Response): void => {
+  const { tanggal, divisiId, subMenuId } = req.query as {
+    tanggal?: string;
+    divisiId?: string;
+    subMenuId?: string;
+  };
+
+  const items = dbStore.getDivisiSubItems({ tanggal, divisiId, subMenuId });
+  res.json({
+    success: true,
+    count: items.length,
+    data: items
+  });
+});
+
+// POST save / update sub-item
+router.post('/sub-items', (req: Request, res: Response): void => {
+  try {
+    const payload = req.body;
+    if (!payload.tanggal || !payload.divisiId || !payload.subMenuId) {
+      res.status(400).json({
+        success: false,
+        message: 'Field tanggal, divisiId, dan subMenuId wajib disertakan.'
+      });
+      return;
+    }
+
+    const saved = dbStore.saveDivisiSubItem(payload);
+    // Background sync to Firestore
+    syncSaveDoc('divisiSubItems', saved.id, saved);
+
+    dbStore.addLog(
+      'USER',
+      saved.petugas || 'Petugas SPPG',
+      `Tugas Divisi (${saved.divisiId})`,
+      `Input Data: ${saved.subMenuJudul || saved.subMenuId}`,
+      `Pencatatan data sub-menu ${saved.subMenuJudul} tanggal ${saved.tanggal}`,
+      req.ip
+    );
+
+    res.json({
+      success: true,
+      message: `Data ${saved.subMenuJudul || 'sub-menu'} berhasil disimpan dan disinkronisasi ke cloud!`,
+      data: saved
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err?.message || 'Gagal menyimpan data sub-menu.'
+    });
+  }
+});
+
+// DELETE sub-item by id
+router.delete('/sub-items/:id', (req: Request, res: Response): void => {
+  const { id } = req.params;
+  const deleted = dbStore.deleteDivisiSubItem(id);
+  if (deleted) {
+    syncDeleteDoc('divisiSubItems', id);
+    res.json({
+      success: true,
+      message: 'Data sub-menu berhasil dihapus.'
+    });
+  } else {
+    res.status(404).json({
+      success: false,
+      message: 'Data sub-menu tidak ditemukan.'
+    });
+  }
+});
+
+// POST trigger instant cloud sync for sub-items
+router.post('/sub-items/sync', (req: Request, res: Response): void => {
+  const { tanggal, divisiId } = req.body as { tanggal?: string; divisiId?: string };
+  const items = dbStore.getDivisiSubItems({ tanggal, divisiId });
+  
+  items.forEach(item => {
+    item.isSynced = true;
+    item.syncedAt = new Date().toISOString();
+    syncSaveDoc('divisiSubItems', item.id, item);
+  });
+
+  res.json({
+    success: true,
+    message: `Berhasil menyinkronkan ${items.length} data ke Cloud Database!`,
+    syncedCount: items.length,
+    data: items
+  });
+});
+
 export default router;

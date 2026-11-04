@@ -95,12 +95,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPath, onNavigate, isOpe
       { title: 'SOP & Pengiriman', path: '/portal-supplier/sop', icon: Icons.Truck },
     ],
     tugas: [
-      { title: 'Tugas Divisi Hari Ini', path: '/tugas-divisi/hari-ini', icon: Icons.CheckSquare },
+      { title: 'Tugas Div. Persiapan', path: '/tugas-divisi/persiapan', icon: Icons.Carrot },
+      { title: 'Tugas Div. Pengolahan', path: '/tugas-divisi/pengolahan', icon: Icons.ChefHat },
+      { title: 'Tugas Div. Pemorsian', path: '/tugas-divisi/pemorsian', icon: Icons.Boxes },
+      { title: 'Tugas Div. Cuci Ompreng', path: '/tugas-divisi/cuci-ompreng', icon: Icons.Sparkles },
       { title: 'Perencanaan Menu Harian', path: '/tugas-divisi/menu-harian', icon: Icons.Utensils },
-      { title: 'Riwayat & Verifikasi', path: '/tugas-divisi/riwayat', icon: Icons.History },
-      { title: 'Template Checklist Divisi', path: '/tugas-divisi/template', icon: Icons.FileSpreadsheet },
-      { title: 'Laporan PDF & Cetak', path: '/tugas-divisi/laporan', icon: Icons.Printer },
-      { title: 'Notifikasi WhatsApp Divisi', path: '/tugas-divisi/whatsapp', icon: Icons.MessageSquare },
     ],
     bbm: [
       { title: 'Laporan BBM & Armada', path: '/bbm/laporan', icon: Icons.Fuel },
@@ -112,9 +111,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPath, onNavigate, isOpe
     ],
     admin: [
       { title: 'Manajemen Pengguna', path: '/admin/users', icon: Icons.Users },
-      { title: 'Builder Menu Dynamic', path: '/admin/menus', icon: Icons.Menu },
       { title: 'Hak Akses & Role', path: '/admin/roles', icon: Icons.Shield },
-      { title: 'Audit & Log Aktivitas', path: '/admin/logs', icon: Icons.FileText },
       { title: 'Master Template Dokumen', path: '/admin/document-template', icon: Icons.FileSignature },
       { title: 'Pengaturan Portal', path: '/admin/settings', icon: Icons.Settings },
     ]
@@ -296,7 +293,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPath, onNavigate, isOpe
                           } else if (moduleKey === 'barangDatang') {
                             handleNav('/barang-datang/form');
                           } else if (moduleKey === 'tugas') {
-                            handleNav('/tugas-divisi/hari-ini');
+                            handleNav('/tugas-divisi/persiapan');
                           } else if (moduleKey === 'stock') {
                             handleNav('/stock-opname/barang');
                           } else if (moduleKey === 'po') {

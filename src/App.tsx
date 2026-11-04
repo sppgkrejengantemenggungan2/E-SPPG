@@ -17,9 +17,7 @@ import { StockOpnameView } from './views/stock/StockOpnameView';
 import { StockOpnameModuleView } from './views/stock/StockOpnameModuleView';
 import { MasterDataView } from './views/master/MasterDataView';
 import { UserManagementView } from './views/admin/UserManagementView';
-import { DynamicMenuView } from './views/admin/DynamicMenuView';
 import { RolePermissionView } from './views/admin/RolePermissionView';
-import { ActivityLogsView } from './views/admin/ActivityLogsView';
 import { PortalSettingsView } from './views/admin/PortalSettingsView';
 import { MasterTemplateDokumenView } from './views/admin/MasterTemplateDokumenView';
 import { InstallationDocView } from './views/docs/InstallationDocView';
@@ -239,12 +237,8 @@ const PortalMain: React.FC = () => {
         return <MasterDataView />;
       case '/admin/users':
         return <UserManagementView />;
-      case '/admin/menus':
-        return <DynamicMenuView />;
       case '/admin/roles':
         return <RolePermissionView />;
-      case '/admin/logs':
-        return <ActivityLogsView />;
       case '/admin/document-template':
         return <MasterTemplateDokumenView />;
       case '/admin/settings':
@@ -281,8 +275,12 @@ const PortalMain: React.FC = () => {
       case '/portal-supplier/sop':
         return <PortalSupplierView currentPath={currentPath} onNavigate={(path) => setCurrentPath(path)} />;
       case '/tugas-divisi':
-      case '/tugas-divisi/hari-ini':
+      case '/tugas-divisi/persiapan':
+      case '/tugas-divisi/pengolahan':
+      case '/tugas-divisi/pemorsian':
+      case '/tugas-divisi/cuci-ompreng':
       case '/tugas-divisi/menu-harian':
+      case '/tugas-divisi/hari-ini':
       case '/tugas-divisi/riwayat':
       case '/tugas-divisi/template':
       case '/tugas-divisi/laporan':

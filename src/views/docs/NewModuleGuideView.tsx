@@ -18,10 +18,10 @@ export const NewModuleGuideView: React.FC = () => {
 
       <div className="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs space-y-5 text-xs text-slate-700 dark:text-slate-300">
         <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-          <Layers className="w-4 h-4 text-blue-600" /> Langkah 1: Pendaftaran Menu Dinamis (Tanpa Touch Code)
+          <Layers className="w-4 h-4 text-blue-600" /> Langkah 1: Pendaftaran Modul di Navigation
         </h3>
         <p>
-          Buka menu <strong>"Pengelola Menu Dinamis"</strong> di Admin Portal, lalu buat item menu baru:
+          Daftarkan modul baru di <code>src/App.tsx</code> dan <code>src/components/layout/Sidebar.tsx</code>:
         </p>
         <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg space-y-1">
           <div>• <strong>Judul:</strong> Nama Modul Baru (misal: "Keuangan & Payroll")</div>

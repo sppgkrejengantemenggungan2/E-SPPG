@@ -329,6 +329,7 @@ export const SYNCED_COLLECTIONS = [
   { key: 'stockMovements', coll: 'stockMovements' },
   { key: 'opnameSessions', coll: 'opnameSessions' },
   { key: 'tugasDivisiRecords', coll: 'tugasDivisi' },
+  { key: 'divisiSubItemRecords', coll: 'divisiSubItems' },
   { key: 'beneficiaryGroups', coll: 'beneficiaryGroups' },
   { key: 'beneficiaryLocations', coll: 'beneficiaryLocations' },
   { key: 'dailyBeneficiaryRecords', coll: 'dailyBeneficiaryRecords' },
@@ -346,6 +347,8 @@ export const SYNCED_COLLECTIONS = [
   { key: 'notifications', coll: 'notifications' },
   { key: 'activityLogs', coll: 'activityLogs' },
   { key: 'menus', coll: 'menus' },
+  { key: 'masterMenuGizi', coll: 'masterMenuGizi' },
+  { key: 'plogDailyMenus', coll: 'plogDailyMenus' },
   { key: 'settings', coll: 'settings', isSingleDoc: true },
   { key: 'documentTemplate', coll: 'documentTemplate', isSingleDoc: true }
 ];

@@ -323,12 +323,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
                   Timeline update lintas modul
                 </p>
               </div>
-              <button 
-                onClick={() => onNavigate('/admin/logs')}
-                className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-              >
-                Log &rarr;
-              </button>
             </div>
 
             {/* Timeline Items */}

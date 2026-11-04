@@ -61,6 +61,11 @@ service cloud.firestore {
       allow write: if true;
     }
 
+    match /divisiSubItems/{itemId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
     match /whatsappDivisiSettings/{settingId} {
       allow read: if true;
       allow write: if true;
@@ -196,6 +201,17 @@ service cloud.firestore {
     }
 
     match /notifications/{notifId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // PLOG Collections
+    match /masterMenuGizi/{menuId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    match /plogDailyMenus/{docId} {
       allow read: if true;
       allow write: if true;
     }

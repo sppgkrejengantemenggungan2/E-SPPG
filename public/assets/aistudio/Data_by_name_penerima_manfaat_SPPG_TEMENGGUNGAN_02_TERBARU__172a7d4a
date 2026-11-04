@@ -1,0 +1,52 @@
+DATA PENERIMA MANFAAT,,,,,,,,,,,,,,,,,,,,,,,,
+SATUAN PELAYANAN PEMENUHAN GIZI (SPPG),,,,,,,,,,,,,,,,,,,,,,,,
+PROBOLINGGO KREJENGAN TEMENGGUNGAN 2,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,
+NO,LEMBAGA,SISWA (1),,SISWA (2),,SISWA (3),,SISWA (4),,SISWA (5),,SISWA (6),,TOTAL,TENDIK,,TOTAL,NON-TENDIK,,TOTAL,KADER,,TOTAL,JUMLAH
+,,P,L,P,L,P,L,P,L,P,L,P,L,,P,L,,P,L,,P,L,,
+1,KB Aziziah,28,15,9,11,,,,,,,,,63,5,0,5,0,0,0,,,0,68
+2,TK Aziziah,11,14,16,25,,,,,,,,,66,7,0,7,1,0,1,,,0,74
+3,MI Kholafiyah Syafi'iyah Zainul Hasan Genggong,31,31,20,30,17,14,18,25,38,22,25,32,303,19,12,31,0,0,0,,,0,334
+4,MTS Zainul Hasan I Genggong ,248,232,225,168,218,189,,,,,,,1280,54,77,131,0,0,0,,,0,1411
+5,MA Zainul Hasan Genggong ,185,151,161,149,186,144,,,,,,,976,16,34,50,5,5,10,,,0,1036
+6,3B (Ibu Hamil),20,0,,,,,,,,,,,24,,,0,,,0,1,0,1,25
+7,3B (Ibu Menyusui),33,0,,,,,,,,,,,33,,,0,,,0,1,0,1,34
+8,3B (Balita),47,36,,,,,,,,,,,80,,,0,,,0,1,0,1,81
+,,TOTAL,,,,,,,,,,,,,TOTAL,,,,,,,,,3063
+,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,
+DATA PENERIMA MANFAAT TAHUN AJARAN BARU ,,,,,,,,,,,,,,,,,,,,,,,,
+SELURUH SISWA DAN PENGURANGAN GURU ATAU NON-TENDIK,,,,,,,,,,,,,,,,,,,,,,,,
+SATUAN PELAYANAN PEMENUHAN GIZI (SPPG) ,,,,,,,,,,,,,,,,,,,,,,,,
+PROBOLINGGO KREJENGAN TEMENGGUNGAN 2,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,
+NO,LEMBAGA,SISWA (1),,SISWA (2),,SISWA (3),,SISWA (4),,SISWA (5),,SISWA (6),,TOTAL,TENDIK DAN NON-TENDIK,,TOTAL,DISTRIBUSI,,,,,,
+,,P,L,P,L,P,L,P,L,P,L,P,L,,P,L,,,,,,,,
+1,KB Aziziah,29,16,8,10,,,,,,,,,63,5,0,5,68,,,,,,
+2,TK Aziziah,11,14,16,25,,,,,,,,,66,8,0,8,74,,,,,,
+3,MI Kholafiyah Syafi'iyah Zainul Hasan Genggong,31,31,20,30,17,14,18,25,38,22,25,32,303,10,6,16,319,,,,,,
+4,MTS Zainul Hasan I Genggong ,250,232,225,168,218,189,,,,,,,1282,27,40,67,1349,,,,,,
+5,MA Zainul Hasan Genggong ,201,170,161,149,186,144,,,,,,,1011,11,19,30,1041,,,,,,
+6,3B (Ibu Hamil),26,,,,,,,,,,,,26,,,0,26,,,,,,
+7,3B (Ibu Menyusui),33,,,,,,,,,,,,33,,,0,33,,,,,,
+8,3B (Balita),44,36,,,,,,,,,,,80,,,0,80,,,,,,
+9,3B (Kader),3,0,,,,,,,,,,,3,,,0,3,,,,,,
+,,,,,,,,,,,,,,2867,,,,2993,,,,,,
+,,,,,,,139,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,
+DATA PENERIMA MANFAAT SESUAI DENGAN SURAT PENETAPAN KELOMPOK PENERIMA MANFAAT VOLUME 2 ,,,,,,,,,,,,,,,,,,,,,,,,
+SATUAN PELAYANAN PEMENUHAN GIZI (SPPG) ,,,,,,,,,,,,,,,,,,,,,,,,
+PROBOLINGGO KREJENGAN TEMENGGUNGAN 2 ,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,
+NO,NAMA LEMBAGA ,SPS 2 (LAPORAN) ,DATA SEKOLAH,KET,SISWA,,JUMLAH,GURU,,JUMLAH,TOTAL,,,,,,,,,,,,,
+,,,,,P,L,,P,L,,,,,,,,,,,,,,,
+1,Posyandu Desa Patemon ,142,142,TRUE,,,142,,,142,142,,,,,,,,,,,,,
+2,KB Aziziah ,65,68,TRUE,26,37,63,2,0,2,65,,,,,,,,,,,,,
+3,TK Aziziah ,74,74,TRUE,27,39,66,8,0,8,74,,,,,,,,,,,,,
+4,MI Kholafiyah Syafi'iyah Zainul Hasan Genggong Putri (1-3),166,319,TRUE,68,0,68,0,0,0,166,,,,,,,,,,,,,
+5,MI Kholafiyah Syafi'iyah Zainul Hasan Genggong Putri (4-6),,,TRUE,82,0,82,10,6,16,,,,,,,,,,,,,,
+6,MTS Zainul Hasan I Genggong ,1316,1349,TRUE,693,589,1282,27,7,34,1316,,,,,,,,,,,,,
+7,MA Zainul Hasan Genggong ,945,1036,FALSE,515,430,945,0,0,0,945,,0,,,,,,,,,,,
+,,2708,2988,FALSE,,,,,,,2708,,,,,,,,,,,,,

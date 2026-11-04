@@ -395,6 +395,88 @@ export interface TaskTemplate {
   checklists: string[];
 }
 
+export type SubMenuId =
+  | 'bahan_rusak_sayur'
+  | 'bahan_rusak_lauk_hewani'
+  | 'bahan_rusak_buah'
+  | 'suhu_ruang_tiga'
+  | 'suhu_chiller_freezer'
+  | 'suhu_makanan_nasi'
+  | 'suhu_makanan_lauk_hewani'
+  | 'suhu_makanan_lauk_nabati'
+  | 'suhu_makanan_sayur'
+  | 'suhu_makanan_buah'
+  | 'foto_ompreng_porsi_kecil'
+  | 'foto_ompreng_porsi_besar'
+  | 'foto_sampah_nasi'
+  | 'foto_sampah_lauk_hewani'
+  | 'foto_sampah_lauk_nabati'
+  | 'foto_sampah_sayur'
+  | 'foto_sampah_buah';
+
+export interface DivisiSubItemRecord {
+  id: string;
+  tanggal: string; // YYYY-MM-DD
+  divisiId: 'persiapan' | 'pengolahan' | 'pemorsian' | 'cuci_ompreng';
+  subMenuId: SubMenuId;
+  subMenuJudul: string;
+  jamInput: string; // HH:mm
+  petugas: string;
+  catatan?: string;
+
+  // 1. Bahan Rusak
+  namaBahan?: string;
+  beratRusakKg?: number;
+  penyebabRusak?: string;
+  tindakanPenanganan?: string; // 'Dimusnahkan' | 'Retur Supplier' | 'Disisihkan'
+
+  // 2. Suhu Makanan Single
+  namaMenu?: string;
+  suhuCelcius?: number;
+  standarSuhu?: string;
+  statusSuhu?: 'Sesuai Standar' | 'Di Bawah Standar' | 'Di Atas Standar' | 'Perlu Penanganan';
+
+  // 3. Suhu 3 Ruangan
+  suhuRuangPersiapan?: number;
+  fotoRuangPersiapan?: string;
+  suhuRuangPengolahan?: number;
+  fotoRuangPengolahan?: string;
+  suhuRuangPemorsian?: number;
+  fotoRuangPemorsian?: string;
+
+  // 4. Suhu 4 Chiller & 2 Freezer
+  suhuChiller1?: number;
+  fotoChiller1?: string;
+  suhuChiller2?: number;
+  fotoChiller2?: string;
+  suhuChiller3?: number;
+  fotoChiller3?: string;
+  suhuChiller4?: number;
+  fotoChiller4?: string;
+  suhuFreezer1?: number;
+  fotoFreezer1?: string;
+  suhuFreezer2?: number;
+  fotoFreezer2?: string;
+
+  // 5. Ompreng
+  beratOmprengGram?: number;
+  statusKelayakanOmpreng?: 'Lolos QC' | 'Perlu Penyesuaian' | 'Tidak Layak';
+  fotoOmpreng?: string;
+
+  // 6. Sampah (Waste)
+  beratSampahKg?: number;
+  estimasiPersenSisa?: number;
+  penyebabSisa?: string;
+  fotoSampah?: string;
+
+  // Common photo proof & sync
+  fotoBukti?: string;
+  isSynced: boolean;
+  syncedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // ==========================================
 // PENERIMA MANFAAT (BENEFICIARY MODULE) TYPES
 // ==========================================
@@ -905,6 +987,107 @@ export interface BarangDatang {
 
 export * from './documentTemplate';
 
+// --- Modul Laporan PLOG (Perencanaan Logistik & Operasional Gizi) ---
+export interface MasterMenuGiziItem {
+  id: string;
+  namaMenu: string;
+  kategori: 'Makanan Pokok' | 'Lauk Hewani' | 'Lauk Nabati' | 'Sayuran' | 'Buah' | 'Ekstra / Minuman';
+  porsiGram: number;
+  energiKkal: number;
+  proteinGram: number;
+  lemakGram: number;
+  karbohidratGram: number;
+  seratGram: number;
+  kalsiumMg: number;
+  zatBesiMg: number;
+  estimasiBiayaPorsi: number;
+  standarKecukupan?: string;
+  keterangan?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
+export interface PlogDailyMenuItem {
+  id: string;
+  tanggal: string; // YYYY-MM-DD
+  namaMenuHarian: string;
+  makananPokok: string;
+  laukHewani: string;
+  laukNabati: string;
+  sayur: string;
+  buah: string;
+  ekstra?: string;
+  jumlahPenerimaManfaat: number;
+  jumlahPorsiHarian: number;
+  rincianSasaran?: {
+    paudTk?: number;
+    sdKelas1_3?: number;
+    sdKelas4_6?: number;
+    smpMts?: number;
+    guruStaf?: number;
+    bumilBusui?: number;
+  };
+  waktuDistribusi?: string;
+  penanggungJawabGizi?: string;
+  statusApproval?: 'Draft' | 'Diverifikasi Ahli Gizi' | 'Disetujui Kepala SPPG';
+  catatan?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
+export interface PlogGiziCalculation {
+  tanggal: string;
+  namaMenuHarian: string;
+  items: {
+    kategori: string;
+    namaMenu: string;
+    porsiGram: number;
+    energiKkal: number;
+    proteinGram: number;
+    lemakGram: number;
+    karbohidratGram: number;
+    seratGram: number;
+    kalsiumMg: number;
+    zatBesiMg: number;
+  }[];
+  totalEnergiKkal: number;
+  totalProteinGram: number;
+  totalLemakGram: number;
+  totalKarbohidratGram: number;
+  totalSeratGram: number;
+  totalKalsiumMg: number;
+  totalZatBesiMg: number;
+  standarAKG: {
+    energiMin: number;
+    energiMax: number;
+    proteinMin: number;
+    proteinMax: number;
+    lemakMin: number;
+    lemakMax: number;
+    karboMin: number;
+    karboMax: number;
+  };
+  statusEvaluasi: 'Sesuai Standar AKG' | 'Kurang Energi' | 'Kurang Protein' | 'Perlu Penyesuaian';
+  rekomendasi?: string;
+}
 
+export interface PlogFoodCostCalculation {
+  tanggal: string;
+  namaMenuHarian: string;
+  jumlahPorsiHarian: number;
+  poNumber?: string;
+  totalBelanjaPO: number;
+  foodCostPerPorsi: number;
+  plafonAnggaranPerPorsi: number;
+  persentaseFoodCost: number;
+  selisihEfisiensi: number;
+  statusBiaya: 'Efisien / Surplus' | 'Sesuai Pagu' | 'Melebihi Pagu';
+  rincianBahanPO: {
+    namaBahan: string;
+    kategori: string;
+    kebutuhanKg: number;
+    hargaSatuan: number;
+    totalBiaya: number;
+    biayaPerPorsi: number;
+  }[];
+}

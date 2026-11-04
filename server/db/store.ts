@@ -53,7 +53,8 @@ import {
   DriverStaff,
   DistributionReport,
   MasterDocumentTemplateConfig,
-  DEFAULT_MASTER_TEMPLATE_CONFIG
+  DEFAULT_MASTER_TEMPLATE_CONFIG,
+  DivisiSubItemRecord
 } from '../../src/types';
 
 export const JWT_SECRET = process.env.JWT_SECRET || 'portal-administrasi-terpadu-super-secret-jwt-key-2026';
@@ -396,28 +397,6 @@ export const initialMenus: MenuItem[] = [
     isActive: true
   },
   {
-    id: 'MNU-006',
-    title: 'Menu Dinamis',
-    path: '/admin/menus',
-    icon: 'Menu',
-    color: '#06B6D4',
-    order: 7,
-    targetModule: 'portal',
-    requiredRole: ['Admin Penuh', 'Super Admin'],
-    isActive: true
-  },
-  {
-    id: 'MNU-007',
-    title: 'Log Aktivitas Central',
-    path: '/admin/logs',
-    icon: 'FileText',
-    color: '#64748B',
-    order: 8,
-    targetModule: 'portal',
-    requiredRole: ['Admin Penuh', 'Super Admin', 'Admin', 'Supervisor', 'Manager'],
-    isActive: true
-  },
-  {
     id: 'MNU-008',
     title: 'Dokumentasi REST API',
     path: '/docs/api',
@@ -744,6 +723,7 @@ class EnterpriseDataStore {
   public waDivisiSettings: WhatsAppDivisiSetting[] = [...initialWaDivisiSettings];
   public taskTemplates: TaskTemplate[] = [...initialTaskTemplates];
   public tugasDivisiRecords: DivisiTaskRecord[] = [];
+  public divisiSubItemRecords: DivisiSubItemRecord[] = [];
 
   // --- KEDATANGAN BARANG STORE ---
   public barangDatang: BarangDatang[] = [...initialBarangDatang];
@@ -1756,6 +1736,41 @@ class EnterpriseDataStore {
       return newRecords;
     }
     return records;
+  }
+
+  public getDivisiSubItems(filter: { tanggal?: string; divisiId?: string; subMenuId?: string }): DivisiSubItemRecord[] {
+    return this.divisiSubItemRecords.filter(item => {
+      if (filter.tanggal && item.tanggal !== filter.tanggal) return false;
+      if (filter.divisiId && item.divisiId !== filter.divisiId) return false;
+      if (filter.subMenuId && item.subMenuId !== filter.subMenuId) return false;
+      return true;
+    });
+  }
+
+  public saveDivisiSubItem(record: Omit<DivisiSubItemRecord, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }): DivisiSubItemRecord {
+    const nowIso = new Date().toISOString();
+    const id = record.id || `SUB-${record.tanggal}-${record.divisiId}-${record.subMenuId}-${Date.now()}`;
+    const idx = this.divisiSubItemRecords.findIndex(r => r.id === id);
+    const fullRecord: DivisiSubItemRecord = {
+      ...record,
+      id,
+      isSynced: true,
+      syncedAt: nowIso,
+      createdAt: idx !== -1 ? this.divisiSubItemRecords[idx].createdAt : nowIso,
+      updatedAt: nowIso
+    };
+    if (idx !== -1) {
+      this.divisiSubItemRecords[idx] = fullRecord;
+    } else {
+      this.divisiSubItemRecords.unshift(fullRecord);
+    }
+    return fullRecord;
+  }
+
+  public deleteDivisiSubItem(id: string): boolean {
+    const prev = this.divisiSubItemRecords.length;
+    this.divisiSubItemRecords = this.divisiSubItemRecords.filter(r => r.id !== id);
+    return this.divisiSubItemRecords.length < prev;
   }
 
   public sanitizeCategories() {
