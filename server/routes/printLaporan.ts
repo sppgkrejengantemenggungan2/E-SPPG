@@ -39,11 +39,14 @@ router.get('/bundle/:tanggal', (req: Request, res: Response): void => {
 
     // 2. Data Menu Harian & PLOG
     let dailyMenu = dbStore.plogDailyMenus.find(m => m.tanggal === tanggal);
+    const tugasRecs = dbStore.getTugasDivisiForDate(tanggal);
+    const tugasMenu = tugasRecs.find(t => t.menuHarian && t.menuHarian.trim())?.menuHarian;
+
     if (!dailyMenu) {
       dailyMenu = {
         id: `PLOG-${tanggal}`,
         tanggal,
-        namaMenuHarian: 'Nasi Putih Pulen, Ayam Goreng Lengkuas, Tempe Bacem Tradisional, Sayur Sop Bakso, Pisang Ambon & Susu UHT',
+        namaMenuHarian: tugasMenu || 'Nasi Putih Pulen, Ayam Goreng Lengkuas, Tempe Bacem Tradisional, Sayur Sop Bakso, Pisang Ambon & Susu UHT',
         makananPokok: 'Nasi Putih Pulen',
         laukHewani: 'Ayam Goreng Lengkuas',
         laukNabati: 'Tempe Bacem Tradisional',

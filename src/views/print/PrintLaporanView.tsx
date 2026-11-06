@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import * as Icons from 'lucide-react';
 import logoImg from '../../assets/images/badan_gizi_logo_1785799692960.jpg';
+import { useDataSync } from '../../lib/dataSync';
 
 interface PrintLaporanViewProps {
   currentPath: string;
@@ -83,6 +84,10 @@ export const PrintLaporanView: React.FC<PrintLaporanViewProps> = ({ currentPath,
   useEffect(() => {
     fetchReportBundle(selectedDate);
   }, [selectedDate]);
+
+  useDataSync(['all', 'menu', 'beneficiary', 'plog', 'tugas', 'po', 'stock', 'barangDatang'], () => {
+    fetchReportBundle(selectedDate);
+  });
 
   const handlePrint = () => {
     window.print();

@@ -56,7 +56,10 @@ import {
   DEFAULT_MASTER_TEMPLATE_CONFIG,
   DivisiSubItemRecord,
   MasterMenuGiziItem,
-  PlogDailyMenuItem
+  PlogDailyMenuItem,
+  BukuKasItem,
+  LaporanKeuanganSummary,
+  ArsipSuratItem
 } from '../../src/types';
 
 export const JWT_SECRET = process.env.JWT_SECRET || 'portal-administrasi-terpadu-super-secret-jwt-key-2026';
@@ -1349,6 +1352,12 @@ class EnterpriseDataStore {
   public masterMenuGizi: MasterMenuGiziItem[] = [...initialMasterMenuGizi];
   public plogDailyMenus: PlogDailyMenuItem[] = [];
 
+  // --- KEUANGAN & BUKU KAS CENTRAL STORE ---
+  public bukuKas: BukuKasItem[] = [];
+
+  // --- ARSIP SURAT DIGITAL STORE ---
+  public arsipSurat: ArsipSuratItem[] = [];
+
   // Helper method to compute and construct a synchronized RAB Plan
   public calculateRABPlan(
     tanggal: string,
@@ -1982,6 +1991,11 @@ class EnterpriseDataStore {
       '/portal-supplier'
     );
 
+    // Automatically increase stock in inventory and record expense in Buku Kas
+    this.syncPOToInventoryAndFinance(targetPOs[0]).catch(err => {
+      console.error('Error syncing PO to inventory and finance:', err);
+    });
+
     return targetPOs[0];
   }
 
@@ -2473,6 +2487,516 @@ class EnterpriseDataStore {
     const prevLen = this.barangDatang.length;
     this.barangDatang = this.barangDatang.filter(b => b.id !== id);
     return this.barangDatang.length < prevLen;
+  }
+
+  // --- CENTRALIZED CROSS-MODULE SYNCHRONIZATION METHODS ---
+
+  /**
+   * Updates daily menu text and metadata across Tugas Divisi, PLOG, Nutrition Plans, and Dashboard.
+   * Persists to Cloud Firestore and triggers real-time SSE broadcast.
+   */
+  public async updateDailyMenuAcrossAll(
+    tanggal: string,
+    menuText: string,
+    metadata?: Partial<PlogDailyMenuItem>
+  ): Promise<{ menuHarian: string; plogRecord: PlogDailyMenuItem; tugasRecords: DivisiTaskRecord[] }> {
+    const cleanText = (menuText || '').trim();
+    const nowIso = new Date().toISOString();
+
+    // 1. Update Tugas Divisi records for all 5 operational divisions on this date
+    const tugasRecords = this.getOrCreateTugasDivisiForDate(tanggal);
+    tugasRecords.forEach(r => {
+      r.menuHarian = cleanText;
+      r.updatedAt = nowIso;
+    });
+
+    // 2. Fetch or update live beneficiary statistics
+    const benStats = this.getBeneficiarySummaryForDate(tanggal);
+    const pBesar = metadata?.porsiBesar !== undefined ? Number(metadata.porsiBesar) : (benStats.portionBreakdown?.porsiBesar || Math.round((benStats.totalPenerima || 1525) * 0.65));
+    const pKecil = metadata?.porsiKecil !== undefined ? Number(metadata.porsiKecil) : (benStats.portionBreakdown?.porsiKecil || ((benStats.totalPenerima || 1525) - pBesar));
+    const totalPorsi = pBesar + pKecil;
+
+    // 3. Upsert into PLOG daily menus
+    const existingIdx = this.plogDailyMenus.findIndex(m => m.tanggal === tanggal);
+    const existingItem = existingIdx !== -1 ? this.plogDailyMenus[existingIdx] : null;
+
+    const plogRecord: PlogDailyMenuItem = {
+      id: existingItem?.id || `PLOG-${tanggal}`,
+      tanggal,
+      namaMenuHarian: cleanText || existingItem?.namaMenuHarian || 'Menu Makan Bergizi Gratis (MBG)',
+      makananPokok: metadata?.makananPokok || existingItem?.makananPokok || 'Nasi Putih Pulen',
+      laukHewani: metadata?.laukHewani || existingItem?.laukHewani || 'Ayam Goreng Lengkuas',
+      laukNabati: metadata?.laukNabati || existingItem?.laukNabati || 'Tempe Bacem Tradisional',
+      sayur: metadata?.sayur || existingItem?.sayur || 'Sayur Sop Wortel Bakso',
+      buah: metadata?.buah || existingItem?.buah || 'Pisang Ambon Segar',
+      ekstra: metadata?.ekstra || existingItem?.ekstra || 'Susu UHT Plain 200ml',
+      jumlahPenerimaManfaat: benStats.totalPenerima || totalPorsi,
+      porsiBesar: pBesar,
+      porsiKecil: pKecil,
+      totalJumlahPorsi: totalPorsi,
+      jumlahPorsiHarian: totalPorsi,
+      rincianSasaran: benStats.portionBreakdown,
+      waktuDistribusi: metadata?.waktuDistribusi || existingItem?.waktuDistribusi || '10:30 WIB',
+      penanggungJawabGizi: metadata?.penanggungJawabGizi || existingItem?.penanggungJawabGizi || 'Rina Wijaya, S.Gz (Ahli Gizi SPPG)',
+      statusApproval: metadata?.statusApproval || existingItem?.statusApproval || 'Diverifikasi Ahli Gizi'
+    };
+
+    if (existingIdx !== -1) {
+      this.plogDailyMenus[existingIdx] = plogRecord;
+    } else {
+      this.plogDailyMenus.unshift(plogRecord);
+    }
+
+    // 4. Update Nutrition Plan if scheduled for this date
+    const nutPlan = this.nutritionPlans.find(p => p.tanggalPelaksanaan === tanggal);
+    if (nutPlan) {
+      nutPlan.menuName = cleanText;
+      nutPlan.updatedAt = nowIso;
+    }
+
+    // 5. Cloud Firestore persistence and real-time SSE broadcast
+    try {
+      const { syncSaveDoc } = await import('./firestore');
+      const { broadcastDataSync } = await import('../events');
+
+      await syncSaveDoc('plogDailyMenus', plogRecord.id, plogRecord);
+      for (const tr of tugasRecords) {
+        await syncSaveDoc('tugasDivisi', tr.id, tr);
+      }
+      if (nutPlan) {
+        await syncSaveDoc('nutritionPlans', nutPlan.id, nutPlan);
+      }
+
+      broadcastDataSync({
+        type: 'menu',
+        action: 'update',
+        date: tanggal,
+        payload: { menuHarian: cleanText, plogRecord }
+      });
+      broadcastDataSync({
+        type: 'plog',
+        action: 'update',
+        date: tanggal,
+        payload: plogRecord
+      });
+      broadcastDataSync({
+        type: 'tugas',
+        action: 'update',
+        date: tanggal
+      });
+    } catch (err) {
+      console.error('Cross-module menu sync warning:', err);
+    }
+
+    return { menuHarian: cleanText, plogRecord, tugasRecords };
+  }
+
+  /**
+   * Synchronizes daily beneficiary counts into PLOG, Tugas Divisi, RAB, and Print Laporan.
+   */
+  public async syncBeneficiariesAcrossAll(tanggal: string): Promise<DailyBeneficiarySummary> {
+    const summary = this.getBeneficiarySummaryForDate(tanggal);
+    const pb = summary.portionBreakdown || { porsiBesar: 0, porsiKecil: 0, balita: 0, bumilBusui: 0 };
+    const totalPenerima = summary.totalPenerima || 0;
+
+    let pBesar = pb.porsiBesar || 0;
+    let pKecil = pb.porsiKecil || 0;
+    if (pBesar === 0 && pKecil === 0 && totalPenerima > 0) {
+      pBesar = Math.round(totalPenerima * 0.65);
+      pKecil = totalPenerima - pBesar;
+    }
+    const totalPorsi = pBesar + pKecil || totalPenerima;
+
+    // 1. Sync into PLOG Daily Menus
+    let plogItem = this.plogDailyMenus.find(m => m.tanggal === tanggal);
+    if (plogItem) {
+      plogItem.jumlahPenerimaManfaat = totalPenerima;
+      plogItem.porsiBesar = pBesar;
+      plogItem.porsiKecil = pKecil;
+      plogItem.totalJumlahPorsi = totalPorsi;
+      plogItem.jumlahPorsiHarian = totalPorsi;
+      plogItem.rincianSasaran = pb;
+    }
+
+    // 2. Sync portion targets to Tugas Divisi records
+    const tugasRecs = this.getTugasDivisiForDate(tanggal);
+    tugasRecs.forEach(t => {
+      (t as any).targetPorsi = totalPorsi;
+    });
+
+    // 3. Sync target count and recalculate required raw materials in Nutrition Plan
+    const nutPlan = this.nutritionPlans.find(p => p.executionDate === tanggal);
+    if (nutPlan) {
+      nutPlan.targetCount = totalPorsi;
+      if (Array.isArray(nutPlan.items)) {
+        nutPlan.items.forEach(it => {
+          it.targetCount = totalPorsi;
+          const gross = Number(it.grossWeightGram) || (Number(it.netWeightGram) / ((Number(it.bddPercent) || 100) / 100));
+          it.requiredKg = Number(((gross * totalPorsi) / 1000).toFixed(4));
+          it.totalPrice = Math.round(it.requiredKg * (Number(it.pricePerKg) || 0));
+        });
+        nutPlan.totalBudget = nutPlan.items.reduce((acc, it) => acc + (it.totalPrice || 0), 0);
+      }
+    }
+
+    // 4. Persist and Broadcast
+    try {
+      const { syncSaveDoc } = await import('./firestore');
+      const { broadcastDataSync } = await import('../events');
+
+      if (plogItem) {
+        await syncSaveDoc('plogDailyMenus', plogItem.id, plogItem);
+      }
+      for (const t of tugasRecs) {
+        await syncSaveDoc('tugasDivisi', t.id, t);
+      }
+      if (nutPlan) {
+        await syncSaveDoc('nutritionPlans', nutPlan.id, nutPlan);
+      }
+
+      broadcastDataSync({
+        type: 'beneficiary',
+        action: 'update',
+        date: tanggal,
+        payload: { summary }
+      });
+      broadcastDataSync({
+        type: 'plog',
+        action: 'update',
+        date: tanggal
+      });
+    } catch (err) {
+      console.error('Cross-module beneficiary sync warning:', err);
+    }
+
+    return summary;
+  }
+
+  /**
+   * Synchronizes received delivery items into Master Stok Barang and creates Stock Movement record.
+   */
+  public async syncBarangDatangToInventory(item: BarangDatang): Promise<void> {
+    if (!item || !item.namaBarang) return;
+
+    const cleanName = item.namaBarang.toLowerCase().trim();
+    const qty = Number(item.jumlahMasuk) || 0;
+    if (qty <= 0) return;
+
+    // Find matching Master Barang
+    const matchedBarang = this.barang.find(b =>
+      b.namaBarang.toLowerCase().trim() === cleanName ||
+      b.kodeBarang.toLowerCase().trim() === cleanName ||
+      b.namaBarang.toLowerCase().includes(cleanName) ||
+      cleanName.includes(b.namaBarang.toLowerCase().trim())
+    );
+
+    if (matchedBarang) {
+      const nowIso = new Date().toISOString();
+      matchedBarang.stokSekarang = (Number(matchedBarang.stokSekarang) || 0) + qty;
+      matchedBarang.updatedAt = nowIso;
+
+      const movementId = `MOV-${Date.now().toString().slice(-6)}-${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
+      const movement: StockMovement = {
+        id: movementId,
+        jenis: 'Masuk',
+        barangId: matchedBarang.id,
+        kodeBarang: matchedBarang.kodeBarang,
+        namaBarang: matchedBarang.namaBarang,
+        satuan: matchedBarang.satuan || item.satuan,
+        jumlah: qty,
+        gudangId: matchedBarang.gudangId || 'GDG-001',
+        gudangNama: matchedBarang.gudangNama || 'Gudang Utama SPPG',
+        referensiNota: `BD-${item.id}`,
+        keterangan: `Penerimaan Barang Datang (${item.jenisBarang}): ${item.namaBarang}`,
+        tanggal: `${item.tanggal} 08:30`,
+        petugas: item.petugas || 'Petugas Gudang',
+        sumberSupplier: item.keterangan || 'Supplier Resmi',
+        hargaSatuan: matchedBarang.hargaSatuan || 0,
+        totalHarga: (matchedBarang.hargaSatuan || 0) * qty,
+        sisaStock: matchedBarang.stokSekarang
+      };
+
+      this.stockMovements.unshift(movement);
+
+      try {
+        const { syncSaveDoc } = await import('./firestore');
+        const { broadcastDataSync } = await import('../events');
+
+        await syncSaveDoc('barang', matchedBarang.id, matchedBarang);
+        await syncSaveDoc('stockMovements', movementId, movement);
+
+        broadcastDataSync({
+          type: 'stock',
+          action: 'update',
+          id: matchedBarang.id,
+          payload: { barang: matchedBarang, movement }
+        });
+      } catch (err) {
+        console.error('Barang datang inventory sync warning:', err);
+      }
+    }
+  }
+
+  /**
+   * Record entry into central Buku Kas (Laporan Keuangan)
+   */
+  public recordBukuKas(entry: Omit<BukuKasItem, 'id' | 'createdAt'>): BukuKasItem {
+    const id = `KAS-${Date.now().toString().slice(-6)}-${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
+    const newEntry: BukuKasItem = {
+      id,
+      ...entry,
+      createdAt: new Date().toISOString()
+    };
+    this.bukuKas.unshift(newEntry);
+
+    import('./firestore').then(({ syncSaveDoc }) => {
+      syncSaveDoc('bukuKas', newEntry.id, newEntry);
+    }).catch(() => {});
+
+    import('../events').then(({ broadcastDataSync }) => {
+      broadcastDataSync({ type: 'all', action: 'create', id: newEntry.id });
+    }).catch(() => {});
+
+    return newEntry;
+  }
+
+  /**
+   * Get dynamic Laporan Keuangan Summary aggregating Buku Kas, confirmed POs, and BBM expenses.
+   */
+  public getBukuKasSummary(startDate?: string, endDate?: string): LaporanKeuanganSummary {
+    let items = [...this.bukuKas];
+    if (startDate) {
+      items = items.filter(k => k.tanggal >= startDate);
+    }
+    if (endDate) {
+      items = items.filter(k => k.tanggal <= endDate);
+    }
+
+    // Dynamic initial/default Pagu Masuk if empty
+    const totalPemasukan = items
+      .filter(k => k.jenis === 'Masuk')
+      .reduce((acc, k) => acc + (Number(k.nominal) || 0), 0) || 50000000;
+
+    const totalPengeluaran = items
+      .filter(k => k.jenis === 'Keluar')
+      .reduce((acc, k) => acc + (Number(k.nominal) || 0), 0);
+
+    const saldoAwal = 15000000;
+    const saldoAkhir = (saldoAwal + totalPemasukan) - totalPengeluaran;
+
+    const categories = [
+      'Belanja Bahan Baku (PO)',
+      'BBM Operasional',
+      'Honor & Tenaga Kerja',
+      'Operasional Dapur & Kantor',
+      'Lainnya'
+    ] as const;
+
+    const pengeluaranPerKategori = categories.map(cat => {
+      const total = items
+        .filter(k => k.jenis === 'Keluar' && k.kategori === cat)
+        .reduce((acc, k) => acc + (Number(k.nominal) || 0), 0);
+      const persentase = totalPengeluaran > 0 ? Number(((total / totalPengeluaran) * 100).toFixed(1)) : 0;
+      return { kategori: cat, total, persentase };
+    });
+
+    return {
+      saldoAwal,
+      totalPemasukan,
+      totalPengeluaran,
+      saldoAkhir,
+      pengeluaranPerKategori,
+      totalTransaksi: items.length
+    };
+  }
+
+  /**
+   * Record digital letter archive and assign official numbering
+   */
+  public recordArsipSurat(item: Omit<ArsipSuratItem, 'id' | 'nomorArsip' | 'tanggalArsip'>): ArsipSuratItem {
+    const seq = String(this.arsipSurat.length + 1).padStart(4, '0');
+    const year = new Date().getFullYear();
+    const nomorArsip = `ARSIP/${year}/${seq}`;
+    const id = `ARS-${year}-${seq}`;
+
+    const newArsip: ArsipSuratItem = {
+      id,
+      nomorArsip,
+      tanggalArsip: new Date().toISOString().split('T')[0],
+      ...item
+    };
+
+    this.arsipSurat.unshift(newArsip);
+
+    import('./firestore').then(({ syncSaveDoc }) => {
+      syncSaveDoc('arsipSurat', newArsip.id, newArsip);
+    }).catch(() => {});
+
+    return newArsip;
+  }
+
+  /**
+   * Synchronizes confirmed Purchase Order to Inventory Stock (Masuk) and Buku Kas (Laporan Keuangan).
+   */
+  public async syncPOToInventoryAndFinance(po: PurchaseOrderDocument): Promise<void> {
+    if (!po) return;
+
+    // 1. Automatically increase stock in MasterBarang
+    if (Array.isArray(po.items)) {
+      for (const poItem of po.items) {
+        const cleanName = (poItem.ingredientName || '').toLowerCase().trim();
+        const qty = Number(poItem.quantityKg) || 0;
+        if (!cleanName || qty <= 0) continue;
+
+        let matched = this.barang.find(b =>
+          b.namaBarang.toLowerCase().trim() === cleanName ||
+          cleanName.includes(b.namaBarang.toLowerCase().trim()) ||
+          b.namaBarang.toLowerCase().includes(cleanName)
+        );
+
+        const nowIso = new Date().toISOString();
+        if (matched) {
+          matched.stokSekarang = (Number(matched.stokSekarang) || 0) + qty;
+          matched.updatedAt = nowIso;
+        } else {
+          matched = {
+            id: `BRG-PO-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 5)}`,
+            kodeBarang: `ING-${Date.now().toString().slice(-4)}`,
+            namaBarang: poItem.ingredientName,
+            kategoriId: 'KAT-001',
+            kategoriNama: 'Bahan Baku',
+            gudangId: 'GDG-001',
+            gudangNama: 'Gudang Utama Central SPPG',
+            satuan: poItem.unit || 'Kg',
+            stokMinimal: 10,
+            stokSekarang: qty,
+            stokAwal: 0,
+            hargaSatuan: Number(poItem.unitPrice) || 0,
+            barcode: `899${Date.now().toString().slice(-8)}`,
+            qrCodeUrl: '',
+            sumberSupplier: po.supplierName || 'Mitra Pangan SPPG',
+            fotoUrl: '',
+            keterangan: `Pengadaan PO ${po.poNumber}`,
+            updatedAt: nowIso
+          };
+          this.barang.unshift(matched);
+        }
+
+        const movement: StockMovement = {
+          id: `MOV-PO-${Date.now().toString().slice(-6)}-${Math.random().toString(36).substring(2, 5).toUpperCase()}`,
+          jenis: 'Masuk',
+          barangId: matched.id,
+          kodeBarang: matched.kodeBarang,
+          namaBarang: matched.namaBarang,
+          satuan: matched.satuan,
+          jumlah: qty,
+          gudangId: matched.gudangId,
+          gudangNama: matched.gudangNama,
+          referensiNota: `PO-${po.poNumber}`,
+          keterangan: `Penerimaan Pembelian PO Bahan: ${poItem.ingredientName} (${po.poNumber})`,
+          tanggal: `${po.orderDate} 09:00`,
+          petugas: po.adminConfirmation?.confirmedBy || 'Petugas Pengadaan',
+          sumberSupplier: po.supplierName,
+          hargaSatuan: Number(poItem.unitPrice) || matched.hargaSatuan,
+          totalHarga: Math.round(qty * (Number(poItem.unitPrice) || matched.hargaSatuan || 0)),
+          sisaStock: matched.stokSekarang
+        };
+
+        this.stockMovements.unshift(movement);
+
+        try {
+          const { syncSaveDoc } = await import('./firestore');
+          await syncSaveDoc('barang', matched.id, matched);
+          await syncSaveDoc('stockMovements', movement.id, movement);
+        } catch (_) {}
+      }
+    }
+
+    // 2. Automatically record expense in Buku Kas (Laporan Keuangan)
+    const nominal = Number(po.totalAmount) || 0;
+    if (nominal > 0) {
+      const existingKas = this.bukuKas.find(k => k.referensi === po.poNumber);
+      if (!existingKas) {
+        this.recordBukuKas({
+          tanggal: po.orderDate || new Date().toISOString().split('T')[0],
+          jenis: 'Keluar',
+          kategori: 'Belanja Bahan Baku (PO)',
+          deskripsi: `Pembayaran Belanja Bahan Pangan PO ${po.poNumber} (${po.supplierName})`,
+          referensi: po.poNumber,
+          nominal,
+          metodePembayaran: 'Kas Operasional',
+          petugas: po.adminConfirmation?.confirmedBy || 'Bendahara SPPG'
+        });
+      }
+    }
+
+    try {
+      const { broadcastDataSync } = await import('../events');
+      broadcastDataSync({ type: 'stock' });
+      broadcastDataSync({ type: 'po' });
+    } catch (_) {}
+  }
+
+  /**
+   * Synchronizes approved raw material usage to deduct inventory stock (Keluar).
+   */
+  public async syncApprovedUsageToStock(
+    tanggal: string,
+    items: Array<{ namaBarang: string; jumlah: number; satuan?: string; divisi?: string }>,
+    petugas?: string
+  ): Promise<void> {
+    if (!Array.isArray(items) || items.length === 0) return;
+
+    for (const item of items) {
+      const cleanName = (item.namaBarang || '').toLowerCase().trim();
+      const qty = Number(item.jumlah) || 0;
+      if (!cleanName || qty <= 0) continue;
+
+      const matched = this.barang.find(b =>
+        b.namaBarang.toLowerCase().trim() === cleanName ||
+        cleanName.includes(b.namaBarang.toLowerCase().trim()) ||
+        b.namaBarang.toLowerCase().includes(cleanName)
+      );
+
+      if (matched) {
+        matched.stokSekarang = Math.max(0, (Number(matched.stokSekarang) || 0) - qty);
+        matched.updatedAt = new Date().toISOString();
+
+        const movement: StockMovement = {
+          id: `MOV-OUT-${Date.now().toString().slice(-6)}-${Math.random().toString(36).substring(2, 5).toUpperCase()}`,
+          jenis: 'Keluar',
+          barangId: matched.id,
+          kodeBarang: matched.kodeBarang,
+          namaBarang: matched.namaBarang,
+          satuan: matched.satuan || item.satuan,
+          jumlah: qty,
+          gudangId: matched.gudangId,
+          gudangNama: matched.gudangNama,
+          referensiNota: `PAKAI-${tanggal}-${(item.divisi || 'DAPUR').toUpperCase()}`,
+          keterangan: `Pemakaian Bahan Pengolahan Menu SPPG: ${matched.namaBarang} (${item.divisi || 'Pengolahan'})`,
+          tanggal: `${tanggal} 06:30`,
+          petugas: petugas || 'Chef Operasional Dapur',
+          penerimaTujuan: `Divisi ${item.divisi || 'Pengolahan'}`,
+          hargaSatuan: matched.hargaSatuan,
+          totalHarga: Math.round(qty * (matched.hargaSatuan || 0)),
+          sisaStock: matched.stokSekarang
+        };
+
+        this.stockMovements.unshift(movement);
+
+        try {
+          const { syncSaveDoc } = await import('./firestore');
+          await syncSaveDoc('barang', matched.id, matched);
+          await syncSaveDoc('stockMovements', movement.id, movement);
+        } catch (_) {}
+      }
+    }
+
+    try {
+      const { broadcastDataSync } = await import('../events');
+      broadcastDataSync({ type: 'stock' });
+      broadcastDataSync({ type: 'tugas' });
+    } catch (_) {}
   }
 }
 

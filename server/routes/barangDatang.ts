@@ -157,6 +157,9 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
       userId: 'API-USER'
     });
 
+    // Automatically update Master Stok Barang inventory & record stock movement
+    await dbStore.syncBarangDatangToInventory(newItem);
+
     // Log Activity & Notification
     dbStore.addLog(
       'SYSTEM',

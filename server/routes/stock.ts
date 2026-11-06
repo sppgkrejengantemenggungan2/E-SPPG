@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { dbStore } from '../db/store';
 import { MasterBarang, StockMovement, StockOpnameSession } from '../../src/types';
 import { syncSaveDoc, syncDeleteDoc, runStockTransaction, generateUniqueId } from '../db/firestore';
+import { broadcastDataSync } from '../events';
 
 const router = Router();
 
@@ -247,6 +248,7 @@ router.post('/movements', async (req: Request, res: Response): Promise<void> => 
     });
 
     dbStore.addLog('USER', petugas || 'Staf Opname', 'Stock Opname', `Stok ${jenis}`, `Transaksi Stok ${jenis} ${jumlah} - ${result.updatedBarang.namaBarang}`, req.ip);
+    broadcastDataSync({ type: 'stock', action: 'update', id: result.updatedBarang.id, payload: result });
 
     res.status(201).json({ success: true, message: `Transaksi Stok ${jenis} Berhasil`, data: { movement: result.movement, barangUpdated: result.updatedBarang } });
   } catch (err: any) {

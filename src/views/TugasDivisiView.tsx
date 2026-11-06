@@ -48,6 +48,7 @@ import {
   DivisiId 
 } from '../types';
 import { useFirestoreRealtime } from '../lib/useFirestoreRealtime';
+import { useDataSync } from '../lib/dataSync';
 import { GlobalReportHeader } from '../components/document/GlobalReportHeader';
 import { GlobalReportFooter } from '../components/document/GlobalReportFooter';
 import { DocumentSignatures } from '../components/document/DocumentSignatures';
@@ -746,6 +747,13 @@ export const TugasDivisiView: React.FC<TugasDivisiViewProps> = ({ currentPath = 
     fetchWaSettings();
     fetchTemplates();
   }, [selectedDate]);
+
+  useDataSync(['tugas', 'menu', 'plog'], () => {
+    fetchTasksForDate(selectedDate);
+    if (activeTab === 'menu-harian') {
+      fetchWeeklyMenuRange(weeklyStartDate, weeklyNumDays);
+    }
+  });
 
   useEffect(() => {
     if (activeTab === 'riwayat') {

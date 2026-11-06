@@ -33,6 +33,7 @@ import {
   PlogGiziCalculation,
   PlogFoodCostCalculation
 } from '../../types';
+import { useDataSync } from '../../lib/dataSync';
 
 interface LaporanPlogViewProps {
   currentPath?: string;
@@ -190,6 +191,10 @@ export const LaporanPlogView: React.FC<LaporanPlogViewProps> = ({ currentPath = 
   useEffect(() => {
     fetchData();
   }, [selectedDate]);
+
+  useDataSync(['plog', 'menu', 'beneficiary', 'po'], () => {
+    fetchData();
+  });
 
   // Handle Save Daily Menu (Sub Menu 1)
   const handleSaveDailyMenu = async (e: React.FormEvent) => {

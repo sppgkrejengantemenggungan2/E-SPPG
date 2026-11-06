@@ -45,6 +45,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { ConfirmModal } from '../components/common/ConfirmModal';
 import { useFirestoreRealtime } from '../lib/useFirestoreRealtime';
+import { useDataSync } from '../lib/dataSync';
 
 interface PenerimaManfaatViewProps {
   currentPath?: string;
@@ -570,6 +571,16 @@ export const PenerimaManfaatView: React.FC<PenerimaManfaatViewProps> = ({ curren
       fetchMonthly();
     }
   }, [activeTab, selectedDate, historyStartDate, historyEndDate, historyGroupFilter, rekapBulan, rekapTahun]);
+
+  useDataSync(['beneficiary'], () => {
+    if (activeTab === 'hari-ini') {
+      fetchDailyByDate(selectedDate);
+    } else if (activeTab === 'rekap-harian') {
+      fetchHistory();
+    } else if (activeTab === 'rekap-bulanan') {
+      fetchMonthly();
+    }
+  });
 
   // Handle Save / Update Daily Record
   const handleSaveRecord = async (e: React.FormEvent) => {

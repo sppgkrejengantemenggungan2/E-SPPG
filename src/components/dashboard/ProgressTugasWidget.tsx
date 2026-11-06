@@ -17,6 +17,7 @@ import {
   Zap
 } from 'lucide-react';
 import { DivisiTaskRecord } from '../../types';
+import { useDataSync } from '../../lib/dataSync';
 
 interface ProgressTugasWidgetProps {
   onNavigate?: (path: string) => void;
@@ -47,6 +48,10 @@ export const ProgressTugasWidget: React.FC<ProgressTugasWidgetProps> = ({ onNavi
   useEffect(() => {
     fetchTodayTasks();
   }, []);
+
+  useDataSync(['tugas'], () => {
+    fetchTodayTasks();
+  });
 
   // Calculate high-level summary metrics
   const totalCompleted = records.reduce((acc, r) => acc + (r.checklists ? r.checklists.filter(c => c.completed).length : 0), 0);

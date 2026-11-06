@@ -391,7 +391,7 @@ router.get('/by-date', (req: Request, res: Response): void => {
 });
 
 // 8. POST RECORD (Create / Update Daily Beneficiary Entry)
-router.post('/record', (req: Request, res: Response): void => {
+router.post('/record', async (req: Request, res: Response): Promise<void> => {
   const data = req.body;
   if (!data.tanggal || !data.namaInstansi) {
     res.status(400).json({ success: false, message: 'Tanggal dan Nama Instansi wajib diisi' });
@@ -486,18 +486,19 @@ router.post('/record', (req: Request, res: Response): void => {
 
   syncSaveDoc('dailyBeneficiaryRecords', savedRecord.id, savedRecord);
 
-  const updatedSummary = dbStore.getBeneficiarySummaryForDate(data.tanggal);
+  // Synchronize across all other modules (PLOG, Tugas Divisi, RAB, Print Laporan)
+  const updatedSummary = await dbStore.syncBeneficiariesAcrossAll(data.tanggal);
 
   res.json({
     success: true,
     data: savedRecord,
     summary: updatedSummary,
-    message: 'Data penerima manfaat berhasil disimpan'
+    message: 'Data penerima manfaat berhasil disimpan & disinkronkan ke seluruh modul'
   });
 });
 
 // 9. DELETE RECORD
-router.delete('/record/:id', (req: Request, res: Response): void => {
+router.delete('/record/:id', async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const idx = dbStore.dailyBeneficiaryRecords.findIndex(r => r.id === id);
   if (idx === -1) {
@@ -517,9 +518,13 @@ router.delete('/record/:id', (req: Request, res: Response): void => {
   syncDeleteDoc('dailyBeneficiaryRecords', id);
   dbStore.addLog('USR-SYSTEM', 'Operator', 'Penerima Manfaat', 'Hapus Penerima', `Menghapus record: ${targetRec.namaInstansi}`);
 
+  // Re-sync across modules
+  const newSummary = await dbStore.syncBeneficiariesAcrossAll(targetRec.tanggal);
+
   res.json({
     success: true,
-    message: 'Data penerima berhasil dihapus'
+    message: 'Data penerima berhasil dihapus & modul tersinkronisasi',
+    summary: newSummary
   });
 });
 

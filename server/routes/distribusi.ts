@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { dbStore } from '../db/store';
 import { DriverStaff, DistributionReport } from '../../src/types';
+import { syncSaveDoc, syncDeleteDoc } from '../db/firestore';
+import { broadcastDataSync } from '../events';
 
 const router = Router();
 
@@ -34,6 +36,8 @@ router.post('/drivers', (req: Request, res: Response): void => {
   };
 
   dbStore.drivers.unshift(newDriver);
+  syncSaveDoc('drivers', newDriver.id, newDriver);
+  broadcastDataSync({ type: 'distribusi', action: 'create', id: newDriver.id });
   dbStore.addLog('ADMIN', 'Operator Distribusi', 'Laporan Distribusi', 'Tambah Driver', `Menambahkan driver baru ${nama}`, req.ip);
 
   res.status(201).json({ success: true, message: 'Driver berhasil ditambahkan', data: newDriver });
@@ -54,6 +58,8 @@ router.put('/drivers/:id', (req: Request, res: Response): void => {
     ...req.body
   };
 
+  syncSaveDoc('drivers', id, dbStore.drivers[index]);
+  broadcastDataSync({ type: 'distribusi', action: 'update', id });
   dbStore.addLog('ADMIN', 'Operator Distribusi', 'Laporan Distribusi', 'Edit Driver', `Memperbarui data driver ${dbStore.drivers[index].nama}`, req.ip);
 
   res.json({ success: true, message: 'Driver berhasil diperbarui', data: dbStore.drivers[index] });
@@ -70,6 +76,8 @@ router.delete('/drivers/:id', (req: Request, res: Response): void => {
   }
 
   const deletedDriver = dbStore.drivers.splice(index, 1)[0];
+  syncDeleteDoc('drivers', id);
+  broadcastDataSync({ type: 'distribusi', action: 'delete', id });
   dbStore.addLog('ADMIN', 'Operator Distribusi', 'Laporan Distribusi', 'Hapus Driver', `Menghapus driver ${deletedDriver.nama}`, req.ip);
 
   res.json({ success: true, message: 'Driver berhasil dihapus', data: deletedDriver });
@@ -154,6 +162,8 @@ router.post('/reports', (req: Request, res: Response): void => {
   };
 
   dbStore.distributionReports.unshift(newReport);
+  syncSaveDoc('distribution_reports', newReport.id, newReport);
+  broadcastDataSync({ type: 'distribusi', action: 'create', id: newReport.id, date: newReport.tanggal });
   dbStore.addLog('DISTRIBUSI', driverNama || 'Petugas Distribusi', 'Laporan Distribusi', 'Tambah Laporan Distribusi', `Input laporan distribusi untuk ${namaInstansi}`, req.ip);
 
   res.status(201).json({ success: true, message: 'Laporan distribusi berhasil disimpan', data: newReport });
@@ -175,6 +185,8 @@ router.put('/reports/:id', (req: Request, res: Response): void => {
     updatedAt: new Date().toISOString()
   };
 
+  syncSaveDoc('distribution_reports', id, dbStore.distributionReports[index]);
+  broadcastDataSync({ type: 'distribusi', action: 'update', id });
   dbStore.addLog('DISTRIBUSI', 'Petugas Distribusi', 'Laporan Distribusi', 'Edit Laporan Distribusi', `Update laporan ID ${id}`, req.ip);
 
   res.json({ success: true, message: 'Laporan distribusi berhasil diperbarui', data: dbStore.distributionReports[index] });
@@ -191,6 +203,8 @@ router.delete('/reports/:id', (req: Request, res: Response): void => {
   }
 
   const deletedReport = dbStore.distributionReports.splice(index, 1)[0];
+  syncDeleteDoc('distribution_reports', id);
+  broadcastDataSync({ type: 'distribusi', action: 'delete', id });
   dbStore.addLog('DISTRIBUSI', 'Petugas Distribusi', 'Laporan Distribusi', 'Hapus Laporan Distribusi', `Menghapus laporan ${deletedReport.id}`, req.ip);
 
   res.json({ success: true, message: 'Laporan distribusi berhasil dihapus', data: deletedReport });

@@ -8,6 +8,7 @@ import {
   NutritionPlanRekapItem 
 } from '../../src/types';
 import { syncSaveDoc, syncDeleteDoc, syncSaveBatch } from '../db/firestore';
+import { broadcastDataSync } from '../events';
 
 const router = Router();
 
@@ -1100,6 +1101,7 @@ router.post('/po/aggregate', (req: Request, res: Response): void => {
 router.post('/po/save', (req: Request, res: Response): void => {
   const poDoc = dbStore.savePO(req.body);
   syncSaveDoc('purchaseOrders', poDoc.id, poDoc);
+  broadcastDataSync({ type: 'po', action: 'update', date: poDoc.date, id: poDoc.id, payload: poDoc });
   dbStore.addLog('USR-SYSTEM', req.body.pemesan || 'Admin SPPG', 'Purchase Order', 'Simpan PO', `Menyimpan Purchase Order ${poDoc.poNumber} (${poDoc.poType})`);
   res.json({
     success: true,
@@ -1112,6 +1114,7 @@ router.post('/po/save-batch', (req: Request, res: Response): void => {
   const batch = req.body.batch || [];
   const saved = dbStore.savePOBatch(batch);
   syncSaveBatch('purchaseOrders', saved);
+  broadcastDataSync({ type: 'po', action: 'update', payload: { count: saved.length } });
   dbStore.addLog('USR-SYSTEM', 'Admin SPPG', 'Purchase Order', 'Simpan Paket PO 5-Hari', `Menyimpan ${saved.length} Dokumen PO Harian Paket Periode`);
   res.json({
     success: true,
@@ -1129,6 +1132,7 @@ router.post('/po/confirm-admin', (req: Request, res: Response): void => {
   const updated = dbStore.confirmPOByAdmin(poId, confirmedBy, notes);
   if (updated) {
     syncSaveDoc('purchaseOrders', updated.id, updated);
+    broadcastDataSync({ type: 'po', action: 'update', id: updated.id, payload: updated });
     dbStore.addLog('USR-ADMIN', confirmedBy || 'Sri Rohayu, S. Pd', 'Purchase Order', 'Konfirmasi Admin', `Admin mengonfirmasi PO ${updated.poNumber} dan merilis ke Portal Supplier`);
     res.json({
       success: true,

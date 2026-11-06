@@ -349,6 +349,8 @@ export const SYNCED_COLLECTIONS = [
   { key: 'menus', coll: 'menus' },
   { key: 'masterMenuGizi', coll: 'masterMenuGizi' },
   { key: 'plogDailyMenus', coll: 'plogDailyMenus' },
+  { key: 'drivers', coll: 'drivers' },
+  { key: 'distributionReports', coll: 'distribution_reports' },
   { key: 'settings', coll: 'settings', isSingleDoc: true },
   { key: 'documentTemplate', coll: 'documentTemplate', isSingleDoc: true }
 ];

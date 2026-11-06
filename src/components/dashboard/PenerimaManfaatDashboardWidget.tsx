@@ -17,6 +17,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { DailyBeneficiaryRecord, DailyBeneficiarySummary } from '../../types';
+import { useDataSync } from '../../lib/dataSync';
 
 interface PenerimaManfaatDashboardWidgetProps {
   onNavigate?: (path: string) => void;
@@ -96,6 +97,11 @@ export const PenerimaManfaatDashboardWidget: React.FC<PenerimaManfaatDashboardWi
   useEffect(() => {
     fetchUpcomingData(targetUpcomingStr);
   }, [selectedUpcomingOffset]);
+
+  useDataSync(['beneficiary'], () => {
+    fetchTodayData();
+    fetchUpcomingData(targetUpcomingStr);
+  });
 
   const activeRecords = selectedTab === 'today' ? todayData.records : upcomingData.records;
   const activeSummary = selectedTab === 'today' ? todayData.summary : upcomingData.summary;

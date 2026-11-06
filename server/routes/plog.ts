@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { dbStore } from '../db/store';
 import { MasterMenuGiziItem, PlogDailyMenuItem, PlogGiziCalculation, PlogFoodCostCalculation, PlogFoodCostItem } from '../../src/types';
+import { syncSaveDoc, syncDeleteDoc } from '../db/firestore';
+import { broadcastDataSync } from '../events';
 
 const router = Router();
 
@@ -84,6 +86,8 @@ router.post('/master-menu', (req: Request, res: Response): void => {
     };
 
     dbStore.masterMenuGizi.push(newItem);
+    syncSaveDoc('masterMenuGizi', newItem.id, newItem);
+    broadcastDataSync({ type: 'plog', action: 'create', id: newItem.id });
     dbStore.addLog('ADMIN', 'Petugas Gizi SPPG', 'Laporan PLOG', 'Tambah Master Menu Gizi', `Menambahkan menu: ${newItem.namaMenu} (${newItem.kategori})`, req.ip);
 
     res.status(201).json({
@@ -116,6 +120,8 @@ router.put('/master-menu/:id', (req: Request, res: Response): void => {
     };
 
     dbStore.masterMenuGizi[idx] = updated;
+    syncSaveDoc('masterMenuGizi', updated.id, updated);
+    broadcastDataSync({ type: 'plog', action: 'update', id: updated.id });
     dbStore.addLog('ADMIN', 'Petugas Gizi SPPG', 'Laporan PLOG', 'Update Master Menu Gizi', `Memperbarui menu: ${updated.namaMenu}`, req.ip);
 
     res.json({
@@ -141,6 +147,8 @@ router.delete('/master-menu/:id', (req: Request, res: Response): void => {
       return;
     }
 
+    syncDeleteDoc('masterMenuGizi', id);
+    broadcastDataSync({ type: 'plog', action: 'delete', id });
     dbStore.addLog('ADMIN', 'Petugas Gizi SPPG', 'Laporan PLOG', 'Hapus Master Menu Gizi', `Menghapus menu: ${item?.namaMenu || id}`, req.ip);
     res.json({ success: true, message: `Menu ${item?.namaMenu || id} berhasil dihapus dari katalog.` });
   } catch (err: any) {
@@ -327,7 +335,7 @@ router.get('/daily-menu', (req: Request, res: Response): void => {
 });
 
 // POST /api/v1/plog/daily-menu
-router.post('/daily-menu', (req: Request, res: Response): void => {
+router.post('/daily-menu', async (req: Request, res: Response): Promise<void> => {
   try {
     const {
       tanggal,
@@ -367,43 +375,20 @@ router.post('/daily-menu', (req: Request, res: Response): void => {
       buah
     ].filter(Boolean).join(' + ');
 
-    const now = new Date().toISOString();
-    const existingIdx = dbStore.plogDailyMenus.findIndex(m => m.tanggal === tanggal);
-
-    const menuRecord: PlogDailyMenuItem = {
-      id: existingIdx !== -1 ? dbStore.plogDailyMenus[existingIdx].id : `PLOG-${tanggal}`,
-      tanggal,
-      namaMenuHarian: combinedName || 'Menu Makan Bergizi Gratis (MBG)',
+    // Synchronize across all modules, persist to Firestore, and broadcast SSE
+    const syncResult = await dbStore.updateDailyMenuAcrossAll(tanggal, combinedName, {
       makananPokok: makananPokok || 'Nasi Putih Pulen',
       laukHewani: laukHewani || 'Ayam Goreng Lengkuas',
       laukNabati: laukNabati || 'Tempe Bacem Tradisional',
       sayur: sayur || 'Sayur Sop Wortel Bakso',
       buah: buah || 'Pisang Ambon Segar',
       ekstra: ekstra || 'Susu UHT Plain 200ml',
-      jumlahPenerimaManfaat: finalPenerima,
       porsiBesar: finalPorsiBesar,
       porsiKecil: finalPorsiKecil,
-      totalJumlahPorsi: finalTotalPorsi,
-      jumlahPorsiHarian: finalTotalPorsi,
-      rincianSasaran: benStats.breakdown,
       waktuDistribusi: waktuDistribusi || '10:30 WIB',
       penanggungJawabGizi: penanggungJawabGizi || 'Rina Wijaya, S.Gz (Ahli Gizi SPPG)',
       statusApproval: statusApproval || 'Diverifikasi Ahli Gizi',
-      catatan: catatan || '',
-      createdAt: existingIdx !== -1 ? dbStore.plogDailyMenus[existingIdx].createdAt : now,
-      updatedAt: now
-    };
-
-    if (existingIdx !== -1) {
-      dbStore.plogDailyMenus[existingIdx] = menuRecord;
-    } else {
-      dbStore.plogDailyMenus.unshift(menuRecord);
-    }
-
-    // Sync menuHarian to tugasDivisiRecords for this date
-    const tugasRecs = dbStore.tugasDivisiRecords.filter(r => r.tanggal === tanggal);
-    tugasRecs.forEach(tr => {
-      tr.menuHarian = menuRecord.namaMenuHarian;
+      catatan: catatan || ''
     });
 
     dbStore.addLog(
@@ -411,14 +396,14 @@ router.post('/daily-menu', (req: Request, res: Response): void => {
       'Petugas Gizi SPPG',
       'Laporan PLOG',
       'Simpan Input Menu Harian',
-      `Menyimpan menu harian tanggal ${tanggal}: ${menuRecord.namaMenuHarian} (Besar: ${finalPorsiBesar}, Kecil: ${finalPorsiKecil}, Total: ${finalTotalPorsi} porsi)`,
+      `Menyimpan menu harian tanggal ${tanggal}: ${syncResult.plogRecord.namaMenuHarian} (Besar: ${finalPorsiBesar}, Kecil: ${finalPorsiKecil}, Total: ${finalTotalPorsi} porsi)`,
       req.ip
     );
 
     res.json({
       success: true,
-      message: `Menu harian tanggal ${tanggal} (${finalTotalPorsi} porsi: ${finalPorsiBesar} besar / ${finalPorsiKecil} kecil) berhasil disimpan & disinkronisasikan!`,
-      data: menuRecord
+      message: `Menu harian tanggal ${tanggal} (${finalTotalPorsi} porsi: ${finalPorsiBesar} besar / ${finalPorsiKecil} kecil) berhasil disimpan & disinkronisasikan ke seluruh sistem!`,
+      data: syncResult.plogRecord
     });
   } catch (err: any) {
     res.status(500).json({ success: false, message: err?.message || 'Gagal menyimpan input menu harian' });

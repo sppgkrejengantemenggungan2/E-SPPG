@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { dbStore } from '../db/store';
 import { DivisiTaskRecord, WhatsAppDivisiSetting, TaskTemplate } from '../../src/types';
 import { syncSaveDoc, syncSaveBatch, syncDeleteDoc } from '../db/firestore';
+import { broadcastDataSync } from '../events';
 
 const router = Router();
 
@@ -102,7 +103,7 @@ router.put('/record', (req: Request, res: Response): void => {
 });
 
 // UPDATE menu harian for a specific date
-router.put('/menu-harian', (req: Request, res: Response): void => {
+router.put('/menu-harian', async (req: Request, res: Response): Promise<void> => {
   const { tanggal, menuHarian } = req.body;
 
   if (!tanggal) {
@@ -110,14 +111,7 @@ router.put('/menu-harian', (req: Request, res: Response): void => {
     return;
   }
 
-  let records = dbStore.getOrCreateTugasDivisiForDate(tanggal);
-
-  records.forEach(r => {
-    r.menuHarian = menuHarian;
-    r.updatedAt = new Date().toISOString();
-  });
-
-  syncSaveBatch('tugasDivisi', records);
+  const result = await dbStore.updateDailyMenuAcrossAll(tanggal, menuHarian);
 
   dbStore.addLog(
     'USER',
@@ -130,14 +124,14 @@ router.put('/menu-harian', (req: Request, res: Response): void => {
 
   res.json({
     success: true,
-    message: `Menu harian untuk tanggal ${tanggal} berhasil diperbarui.`,
-    menuHarian,
+    message: `Menu harian untuk tanggal ${tanggal} berhasil diperbarui & disinkronisasi ke seluruh modul.`,
+    menuHarian: result.menuHarian,
     data: dbStore.getTugasDivisiForDate(tanggal)
   });
 });
 
 // DELETE / CLEAR menu harian for a specific date
-router.delete('/menu-harian', (req: Request, res: Response): void => {
+router.delete('/menu-harian', async (req: Request, res: Response): Promise<void> => {
   const { tanggal } = req.query as { tanggal?: string };
 
   if (!tanggal) {
@@ -145,11 +139,7 @@ router.delete('/menu-harian', (req: Request, res: Response): void => {
     return;
   }
 
-  const records = dbStore.tugasDivisiRecords.filter(r => r.tanggal === tanggal);
-  records.forEach(r => {
-    r.menuHarian = '';
-    r.updatedAt = new Date().toISOString();
-  });
+  await dbStore.updateDailyMenuAcrossAll(tanggal, '');
 
   dbStore.addLog(
     'USER',
@@ -162,7 +152,7 @@ router.delete('/menu-harian', (req: Request, res: Response): void => {
 
   res.json({
     success: true,
-    message: `Menu harian tanggal ${tanggal} berhasil dihapus.`
+    message: `Menu harian tanggal ${tanggal} berhasil dihapus dari seluruh modul.`
   });
 });
 
@@ -201,7 +191,7 @@ router.get('/menu-harian-range', (req: Request, res: Response): void => {
 });
 
 // PUT menu harian bulk for weekly menu planning
-router.put('/menu-harian-bulk', (req: Request, res: Response): void => {
+router.put('/menu-harian-bulk', async (req: Request, res: Response): Promise<void> => {
   const { items } = req.body as { items: Array<{ tanggal: string; menuHarian: string }> };
 
   if (!Array.isArray(items)) {
@@ -209,14 +199,10 @@ router.put('/menu-harian-bulk', (req: Request, res: Response): void => {
     return;
   }
 
-  items.forEach(item => {
-    if (!item.tanggal) return;
-    const records = dbStore.getOrCreateTugasDivisiForDate(item.tanggal);
-    records.forEach(r => {
-      r.menuHarian = item.menuHarian || '';
-      r.updatedAt = new Date().toISOString();
-    });
-  });
+  for (const item of items) {
+    if (!item.tanggal) continue;
+    await dbStore.updateDailyMenuAcrossAll(item.tanggal, item.menuHarian || '');
+  }
 
   dbStore.addLog(
     'USER',
@@ -229,7 +215,7 @@ router.put('/menu-harian-bulk', (req: Request, res: Response): void => {
 
   res.json({
     success: true,
-    message: `Perencanaan menu harian untuk ${items.length} hari berhasil disimpan!`
+    message: `Perencanaan menu harian untuk ${items.length} hari berhasil disimpan & disinkronkan ke seluruh sistem!`
   });
 });
 
@@ -391,6 +377,14 @@ router.post('/sub-items', (req: Request, res: Response): void => {
     // Background sync to Firestore
     syncSaveDoc('divisiSubItems', saved.id, saved);
 
+    broadcastDataSync({
+      type: 'tugas',
+      action: 'update',
+      date: saved.tanggal,
+      id: saved.id,
+      payload: saved
+    });
+
     dbStore.addLog(
       'USER',
       saved.petugas || 'Petugas SPPG',
@@ -419,6 +413,11 @@ router.delete('/sub-items/:id', (req: Request, res: Response): void => {
   const deleted = dbStore.deleteDivisiSubItem(id);
   if (deleted) {
     syncDeleteDoc('divisiSubItems', id);
+    broadcastDataSync({
+      type: 'tugas',
+      action: 'delete',
+      id
+    });
     res.json({
       success: true,
       message: 'Data sub-menu berhasil dihapus.'

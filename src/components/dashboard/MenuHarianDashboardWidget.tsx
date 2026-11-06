@@ -16,6 +16,8 @@ import {
   Edit3
 } from 'lucide-react';
 
+import { useDataSync } from '../../lib/dataSync';
+
 interface MenuHarianDashboardWidgetProps {
   onNavigate?: (path: string) => void;
 }
@@ -71,6 +73,10 @@ export const MenuHarianDashboardWidget: React.FC<MenuHarianDashboardWidgetProps>
   useEffect(() => {
     fetchMenuForDate(targetDateStr);
   }, [targetDateStr]);
+
+  useDataSync(['menu', 'plog', 'tugas'], () => {
+    fetchMenuForDate(targetDateStr);
+  });
 
   // Parse menu text into 5 items
   const parseMenuItems = (text: string) => {

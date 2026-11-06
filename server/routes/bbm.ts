@@ -414,6 +414,19 @@ router.post('/', (req: Request, res: Response) => {
     dbStore.laporanBbm.unshift(newLog);
     syncSaveDoc('laporanBbm', newLog.id, newLog);
 
+    // Otomatis terhubung dengan Laporan Keuangan (Buku Kas Umum)
+    dbStore.recordBukuKas({
+      tanggal: tanggalPembelian,
+      jenis: 'Keluar',
+      kategori: 'BBM Operasional',
+      deskripsi: `Pengisian BBM ${newLog.jenisBbm} (${newLog.jumlahLiter} Liter) - ${newLog.kendaraanNama} (${newLog.platNomor})`,
+      referensi: newLog.id,
+      nominal: numHarga,
+      metodePembayaran: 'Kas Operasional',
+      petugas: userInput || 'Driver / Petugas Distribusi',
+      buktiUrl: uploadStruk
+    });
+
     // Logging & Notification
     dbStore.addLog(
       'SYSTEM', 

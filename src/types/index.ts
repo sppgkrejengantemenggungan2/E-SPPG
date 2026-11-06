@@ -1186,3 +1186,60 @@ export type PrintReportType =
   | 'suhu-makanan-pemorsian'
   | 'food-waste';
 
+// =========================================================
+// KEUANGAN & BUKU KAS CENTRAL DOMAIN
+// =========================================================
+export interface BukuKasItem {
+  id: string;
+  tanggal: string; // YYYY-MM-DD
+  jenis: 'Masuk' | 'Keluar';
+  kategori:
+    | 'Belanja Bahan Baku (PO)'
+    | 'BBM Operasional'
+    | 'Honor & Tenaga Kerja'
+    | 'Operasional Dapur & Kantor'
+    | 'Penerimaan Kas / Pagu SPPG'
+    | 'Lainnya';
+  deskripsi: string;
+  referensi: string; // e.g. PO-..., BBM-..., BAST-...
+  nominal: number;
+  metodePembayaran: 'Kas Tunai' | 'Transfer Bank' | 'Kas Operasional';
+  petugas: string;
+  buktiUrl?: string;
+  createdAt: string;
+}
+
+export interface LaporanKeuanganSummary {
+  saldoAwal: number;
+  totalPemasukan: number;
+  totalPengeluaran: number;
+  saldoAkhir: number;
+  pengeluaranPerKategori: {
+    kategori: string;
+    total: number;
+    persentase: number;
+  }[];
+  totalTransaksi: number;
+}
+
+// =========================================================
+// ARSIP SURAT RESMI DOMAIN
+// =========================================================
+export interface ArsipSuratItem {
+  id: string;
+  nomorSurat: string;
+  nomorArsip: string;
+  tipe: 'Surat Masuk' | 'Surat Keluar' | 'Disposisi' | 'BAST' | 'Surat Tugas';
+  instansiTerkait: string; // Pengirim atau Tujuan
+  perihal: string;
+  tanggalSurat: string;
+  tanggalArsip: string;
+  klasifikasi: string; // e.g. 'Operasional', 'Administrasi', 'Keuangan', 'Distribusi'
+  status: 'Tersimpan' | 'Aktif' | 'Disposisi';
+  fileUrl?: string;
+  qrCodeUrl?: string;
+  lokasiFisik?: string; // e.g. 'Lemari Arsip A - Box 02'
+  petugas: string;
+}
+
+

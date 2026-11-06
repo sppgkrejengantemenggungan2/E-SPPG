@@ -55,6 +55,7 @@ import plogRoutes from './server/routes/plog';
 import printLaporanRoutes from './server/routes/printLaporan';
 import { swaggerSpec } from './server/docs/swagger';
 import { initFirestoreSync, getCloudInfo, testFirestoreConnection } from './server/db/firestore';
+import { sseHandler, broadcastDataSync } from './server/events';
 
 async function startServer() {
   const app = express();
@@ -114,6 +115,20 @@ async function startServer() {
   // Swagger Specs Endpoint
   app.get('/api/docs/swagger.json', (req: Request, res: Response) => {
     res.json(swaggerSpec);
+  });
+
+  // Real-time Event Stream for Instant Cross-Menu Synchronization
+  app.get('/api/v1/events', sseHandler);
+  app.post('/api/v1/events/broadcast', (req: Request, res: Response) => {
+    const { type, action, date, id, payload } = req.body;
+    broadcastDataSync({
+      type: type || 'all',
+      action: action || 'sync',
+      date,
+      id,
+      payload
+    });
+    res.json({ success: true, message: 'Broadcast dispatched' });
   });
 
   // REST API Gateway Routes (/api/v1)
