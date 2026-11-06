@@ -52,6 +52,7 @@ import barangDatangRoutes from './server/routes/barangDatang';
 import documentTemplateRoutes from './server/routes/documentTemplate';
 import distribusiRoutes from './server/routes/distribusi';
 import plogRoutes from './server/routes/plog';
+import printLaporanRoutes from './server/routes/printLaporan';
 import { swaggerSpec } from './server/docs/swagger';
 import { initFirestoreSync, getCloudInfo, testFirestoreConnection } from './server/db/firestore';
 
@@ -137,6 +138,7 @@ async function startServer() {
   app.use('/api/v1/document-template', documentTemplateRoutes);
   app.use('/api/v1/distribusi', distribusiRoutes);
   app.use('/api/v1/plog', plogRoutes);
+  app.use('/api/v1/print-laporan', printLaporanRoutes);
 
   // Development vs Production Environment Setup
   if (!isProduction) {

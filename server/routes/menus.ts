@@ -49,6 +49,20 @@ router.get('/', (req: Request, res: Response): void => {
     });
   }
 
+  if (!dbStore.menus.some(m => m.path === '/print-laporan' || m.id === 'MNU-008-PRINT')) {
+    dbStore.menus.push({
+      id: 'MNU-008-PRINT',
+      title: 'Print Laporan',
+      path: '/print-laporan',
+      icon: 'Printer',
+      color: '#2563EB',
+      order: 4.3,
+      targetModule: 'printLaporan',
+      requiredRole: ['Admin Penuh', 'Staff Kantor', 'Distribusi', 'Super Admin', 'Admin', 'Operator', 'Supervisor', 'Manager', 'Staff', 'Viewer'],
+      isActive: true
+    });
+  }
+
   const sortedMenus = [...dbStore.menus].sort((a, b) => a.order - b.order);
   res.json({ success: true, data: sortedMenus });
 });

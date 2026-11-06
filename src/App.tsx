@@ -34,6 +34,7 @@ import { PortalSupplierView } from './views/supplier/PortalSupplierView';
 import { BarangDatangView } from './views/stock/BarangDatangView';
 import { LaporanDistribusiView } from './views/distribusi/LaporanDistribusiView';
 import { LaporanPlogView } from './views/plog/LaporanPlogView';
+import { PrintLaporanView } from './views/print/PrintLaporanView';
 
 const PortalMain: React.FC = () => {
   const { user, isAuthenticated, isAuthLoading } = useAuth();
@@ -106,16 +107,16 @@ const PortalMain: React.FC = () => {
 
     // Staff Kantor
     if (role === 'Staff Kantor') {
-      return path.startsWith('/esurat') || path.startsWith('/stock') || path.startsWith('/tugas-divisi') || path.startsWith('/perencanaan-bahan') || path.startsWith('/laporan-plog') || path === '/dashboard';
+      return path.startsWith('/esurat') || path.startsWith('/stock') || path.startsWith('/tugas-divisi') || path.startsWith('/perencanaan-bahan') || path.startsWith('/laporan-plog') || path.startsWith('/print-laporan') || path === '/dashboard';
     }
 
     // Distribusi
     if (role === 'Distribusi') {
-      return path.startsWith('/bbm') || path.startsWith('/tugas-divisi') || path === '/dashboard';
+      return path.startsWith('/bbm') || path.startsWith('/tugas-divisi') || path.startsWith('/print-laporan') || path === '/dashboard';
     }
 
     // Role specific default fallback
-    if (path.startsWith('/esurat') || path.startsWith('/stock')) {
+    if (path.startsWith('/esurat') || path.startsWith('/stock') || path.startsWith('/print-laporan')) {
       return ['Operator', 'Supervisor', 'Manager', 'Staff'].includes(role);
     }
     if (path.startsWith('/bbm')) {
@@ -308,6 +309,25 @@ const PortalMain: React.FC = () => {
       case '/laporan-plog/food-cost':
       case '/laporan-plog/master-menu-gizi':
         return <LaporanPlogView currentPath={currentPath} onNavigate={(path) => setCurrentPath(path)} />;
+      case '/print-laporan':
+      case '/print-laporan/bast':
+      case '/print-laporan/surat-tugas':
+      case '/print-laporan/organoleptik-penerima':
+      case '/print-laporan/organoleptik-plog':
+      case '/print-laporan/sampel-menu':
+      case '/print-laporan/flayer-menu':
+      case '/print-laporan/penerima-manfaat':
+      case '/print-laporan/informasi-gizi':
+      case '/print-laporan/food-cost':
+      case '/print-laporan/purchase-order':
+      case '/print-laporan/qc-barang':
+      case '/print-laporan/suhu-ruang-persiapan':
+      case '/print-laporan/suhu-ruang-pengolahan':
+      case '/print-laporan/suhu-ruang-pemorsian':
+      case '/print-laporan/suhu-makanan-pengolahan':
+      case '/print-laporan/suhu-makanan-pemorsian':
+      case '/print-laporan/food-waste':
+        return <PrintLaporanView currentPath={currentPath} onNavigate={(path) => setCurrentPath(path)} />;
       default:
         return <DashboardView onNavigate={(path) => setCurrentPath(path)} />;
     }

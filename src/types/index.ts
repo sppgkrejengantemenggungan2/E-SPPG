@@ -54,6 +54,8 @@ export interface RolePermission {
   };
 }
 
+export type TargetModuleType = 'portal' | 'esurat' | 'stock' | 'po' | 'barangDatang' | 'plog' | 'printLaporan' | 'external';
+
 export interface MenuItem {
   id: string;
   title: string;
@@ -61,7 +63,7 @@ export interface MenuItem {
   icon: string; // Lucide icon identifier
   color?: string; // CSS color or Tailwind class
   order: number;
-  targetModule: 'portal' | 'esurat' | 'stock' | 'po' | 'barangDatang' | 'plog' | 'external';
+  targetModule: TargetModuleType;
   requiredRole?: UserRole[];
   parentId?: string;
   isActive: boolean;
@@ -1161,3 +1163,26 @@ export interface PlogFoodCostCalculation {
   porsiKecilDetail: PlogFoodCostProfile;
   rincianBahanPO: PlogFoodCostItem[];
 }
+
+// =========================================================
+// PRINT LAPORAN (PRINT & PDF REPORTING DOMAIN)
+// =========================================================
+export type PrintReportType =
+  | 'bast'
+  | 'surat-tugas'
+  | 'organoleptik-penerima'
+  | 'organoleptik-plog'
+  | 'sampel-menu'
+  | 'flayer-menu'
+  | 'penerima-manfaat'
+  | 'gizi-menu'
+  | 'food-cost'
+  | 'purchase-order'
+  | 'qc-bahan'
+  | 'suhu-ruang-persiapan'
+  | 'suhu-ruang-pengolahan'
+  | 'suhu-ruang-pemorsian'
+  | 'suhu-makanan-pengolahan'
+  | 'suhu-makanan-pemorsian'
+  | 'food-waste';
+

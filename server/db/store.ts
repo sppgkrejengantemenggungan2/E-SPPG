@@ -366,6 +366,17 @@ export const initialMenus: MenuItem[] = [
     isActive: true
   },
   {
+    id: 'MNU-008-PRINT',
+    title: 'Print Laporan',
+    path: '/print-laporan',
+    icon: 'Printer',
+    color: '#0284C7',
+    order: 4.3,
+    targetModule: 'printLaporan',
+    requiredRole: ['Admin Penuh', 'Staff Kantor', 'Distribusi', 'Super Admin', 'Admin', 'Operator', 'Supervisor', 'Manager', 'Staff', 'Viewer'],
+    isActive: true
+  },
+  {
     id: 'MNU-003-BBM',
     title: 'Laporan BBM Kendaraan',
     path: '/bbm/laporan',

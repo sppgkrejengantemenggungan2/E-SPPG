@@ -32,6 +32,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPath, onNavigate, isOpe
     tugas: true,
     bbm: true,
     plog: true,
+    printLaporan: true,
     master: false,
     admin: true,
   });
@@ -111,6 +112,25 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPath, onNavigate, isOpe
       { title: 'Informasi Food Cost Menu', path: '/laporan-plog/food-cost', icon: Icons.DollarSign },
       { title: 'Master Menu & Kandungan Gizi', path: '/laporan-plog/master-menu-gizi', icon: Icons.BookOpen },
     ],
+    printLaporan: [
+      { title: 'Cetak BAST', path: '/print-laporan/bast', icon: Icons.FileCheck2 },
+      { title: 'Cetak Surat Tugas', path: '/print-laporan/surat-tugas', icon: Icons.FileSignature },
+      { title: 'Cetak Form Organoleptik Penerima', path: '/print-laporan/organoleptik-penerima', icon: Icons.SmilePlus },
+      { title: 'Cetak Form Organoleptik PLOG', path: '/print-laporan/organoleptik-plog', icon: Icons.CheckSquare },
+      { title: 'Cetak Form Sampel + Foto Menu', path: '/print-laporan/sampel-menu', icon: Icons.Camera },
+      { title: 'Cetak Flayer Informasi Menu', path: '/print-laporan/flayer-menu', icon: Icons.Megaphone },
+      { title: 'Cetak Rincian Data Penerima Manfaat', path: '/print-laporan/penerima-manfaat', icon: Icons.Users },
+      { title: 'Cetak Rincian Informasi Gizi Menu', path: '/print-laporan/informasi-gizi', icon: Icons.Activity },
+      { title: 'Cetak Rincian Informasi Food Cost Menu', path: '/print-laporan/food-cost', icon: Icons.DollarSign },
+      { title: 'Cetak Rincian Purchase Order', path: '/print-laporan/purchase-order', icon: Icons.FileSpreadsheet },
+      { title: 'Cetak Rincian QC Bahan & Barang', path: '/print-laporan/qc-barang', icon: Icons.ShieldCheck },
+      { title: 'Cetak Data + Foto Suhu Ruang Persiapan', path: '/print-laporan/suhu-ruang-persiapan', icon: Icons.ThermometerSnowflake },
+      { title: 'Cetak Data + Foto Suhu Ruang Pengolahan', path: '/print-laporan/suhu-ruang-pengolahan', icon: Icons.ThermometerSun },
+      { title: 'Cetak Data + Foto Suhu Ruang Pemorsian', path: '/print-laporan/suhu-ruang-pemorsian', icon: Icons.Thermometer },
+      { title: 'Cetak Data + Foto Suhu Makanan Pengolahan', path: '/print-laporan/suhu-makanan-pengolahan', icon: Icons.Flame },
+      { title: 'Cetak Suhu Makanan Pemorsian', path: '/print-laporan/suhu-makanan-pemorsian', icon: Icons.Soup },
+      { title: 'Cetak Rincian Data + Foto Food Waste', path: '/print-laporan/food-waste', icon: Icons.Trash2 },
+    ],
     distribusi: [
       { title: 'Form Distribusi', path: '/laporan-distribusi/form', icon: Icons.ClipboardEdit },
       { title: 'Data Distribusi', path: '/laporan-distribusi/data', icon: Icons.TableProperties },
@@ -151,6 +171,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPath, onNavigate, isOpe
     if (menu.path.includes('perencanaan-bahan')) return 'perencanaanBahan';
     if (menu.path.includes('tugas-divisi')) return 'tugas';
     if (menu.targetModule === 'plog' || menu.path.includes('laporan-plog')) return 'plog';
+    if (menu.targetModule === 'printLaporan' || menu.path.includes('print-laporan')) return 'printLaporan';
     if (menu.path.includes('bbm')) return 'bbm';
     if (menu.path.includes('laporan-distribusi') || menu.path.includes('distribusi')) return 'distribusi';
     if (menu.path.includes('admin') || menu.path.includes('users') || menu.path.includes('menu')) return 'admin';
